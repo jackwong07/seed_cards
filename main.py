@@ -8,7 +8,7 @@ from werkzeug.security import generate_password_hash, check_password_hash
 from flask_login import UserMixin, login_user, LoginManager, login_required, current_user, logout_user
 from forms import SignupForm, EditAccountForm, EditCardForm, PaymentForm, LogInForm, EditCardForm
 from flask_ckeditor import CKEditor
-
+from PIL import Image
 
 #CREATE AND INITIALIZE FLASK APP
 app = Flask(__name__, template_folder='templates')
@@ -168,12 +168,18 @@ def card(url_path):
     result = db.session.execute(db.select(User).where(User.url_path==url_path))
     user = result.scalar()
     if user.payment ==True:
+        #Image resizing
+        img = Image.open('static/images/profile.jpg')
+        img.load()
+        img.thumbnail((400, 200))
+
+        
         if current_user.is_authenticated and current_user.url_path == user.url_path:
             can_edit=True
             print("authenticated")
             #show edit button
-            return render_template("bus_card.html", user=user, can_edit=can_edit)
-        return render_template("bus_card.html", user=user)
+            return render_template("bus_card.html", user=user, can_edit=can_edit, img=img)
+        return render_template("bus_card.html", user=user, img=img)
     else:
         return "Sorry, user doesn't exist"
 

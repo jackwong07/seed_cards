@@ -27,6 +27,7 @@ header {
     padding-bottom: 37.5%; /* = ( 600 / 1600 ) x 100 */
     background-image: url( 'http://placehold.it/1600x600/A00' );
     background-size: cover;
+    height: 400px;
   }
 
   .mask-custom {
@@ -35,3 +36,41 @@ header {
     background: rgba(161, 44, 199, 0.31);
     opacity: 1;
   }
+
+
+
+
+
+/* Magazine Template */
+body.magazine {
+  background-color: #f9f9f9;
+  background-image: linear-gradient(225deg, #ffffff 0%, #d1d1d1 100%);
+  background-repeat: no-repeat;
+  background-repeat: no-repeat;
+  background-size: cover;
+  min-width: 100%;
+  min-height: 100vh;
+}
+
+.nav-link.minimalist-template{
+  color: black;
+}
+
+
+.site-heading.minimalist-template{
+  -webkit-text-fill-color: rgb(0, 0, 0);
+  background-color: rgb(255, 255, 255);
+  text-indent: 30px;
+  display:table;
+  padding-right: 15px;
+  margin-top: 300px;
+}
+
+.sub-heading.minimalist-template{
+  -webkit-text-fill-color: rgb(0, 0, 0);
+  background-color: rgb(255, 255, 255);
+  text-indent: 30px;
+  display:table;
+  padding-right: 15px;
+  margin-top: 10px;
+}
