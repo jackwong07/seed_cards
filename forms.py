@@ -2,6 +2,7 @@ from flask_wtf import FlaskForm
 from wtforms import StringField, PasswordField, SubmitField, SelectField, FileField
 from wtforms.validators import DataRequired, EqualTo, ValidationError
 import re
+from flask_ckeditor import CKEditorField
 
 #FORM VALIDATION AND CREATION
 def validate_email(form, field):
@@ -22,16 +23,14 @@ class SignupForm(FlaskForm):
     url_path = StringField(label="Unique URL path", validators=[DataRequired()])
     name = StringField(label='Name', validators=[DataRequired()])
     job_title = StringField(label='Job Title', validators=[DataRequired()])
-    picture = FileField(label='Profile Picture (optional)')#need to edit this
+    picture = FileField(label='Profile Picture (optional)')
+    #need to edit this
     submit = SubmitField(label="Submit")
 
+#USE STRIPE
 class PaymentForm(FlaskForm):
     credit_name = StringField(label='Name', validators=[DataRequired()])
     credit_email = StringField(label='Email', validators=[DataRequired(), validate_email])
-    #credit_cardnum = StringField(label='Card Number', validators=[DataRequired()])
-    #credit_expdate = StringField(label='Expiration Date', validators=[DataRequired()])
-    #credit_cvv = StringField(label='CVV', validators=[DataRequired()])
-    credit_zip = StringField(label='Zip', validators=[DataRequired()])
     submit = SubmitField(label="Submit")
 
 class LogInForm(FlaskForm):
@@ -46,6 +45,8 @@ class EditCardForm(FlaskForm):
     name = StringField(label='Name')
     job_title = StringField(label='Job Title')
     picture = FileField(label='Profile Picture')
+    headline_description = CKEditorField(label='Short Description')
+    displayed_email = StringField(label='Email')
     phone = StringField(label="Phone")
     logo = FileField(label='Logo')
     company = StringField(label='Company')
@@ -56,9 +57,17 @@ class EditCardForm(FlaskForm):
     social_link2 = StringField(label="Social Link 2")
     social_plat3 = SelectField(label="Social Platform 3", choices=[('Instagram'), ('Github'), ('DeviantArt')])
     social_link3 = StringField(label="Social Link 3")
+    social_plat4 = SelectField(label="Social Platform 4", choices=[('Instagram'), ('Github'), ('DeviantArt')])
+    social_link4 = StringField(label="Social Link 4")
     website_link = StringField(label="Website")
     venmo = StringField(label="Venmo")
     stripe = StringField(label="Stripe")
+    work1 = FileField(label='Work 1')
+    work2 = FileField(label='Work 2')
+    work3 = FileField(label='Work 3')
+    work4 = FileField(label='Work 4')
+    work5 = FileField(label='Work 5')
+    body = CKEditorField(label="Long Description")
     submit = SubmitField(label="Update")
 
 class EditAccountForm(FlaskForm):

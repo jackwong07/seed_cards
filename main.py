@@ -3,35 +3,59 @@ import os
 from flask_bootstrap import Bootstrap4
 from flask_sqlalchemy import SQLAlchemy
 from sqlalchemy.orm import DeclarativeBase, Mapped, mapped_column
-from sqlalchemy import Integer, String, Float, Boolean
+from sqlalchemy import Integer, String, Float, Boolean, Text
 from werkzeug.security import generate_password_hash, check_password_hash
 from flask_login import UserMixin, login_user, LoginManager, login_required, current_user, logout_user
 from forms import SignupForm, EditAccountForm, EditCardForm, PaymentForm, LogInForm, EditCardForm
+from flask_ckeditor import CKEditor
+
 
 #CREATE AND INITIALIZE FLASK APP
 app = Flask(__name__, template_folder='templates')
-app.config['SECRET_KEY'] = os.environ.get("SECRET_KEY")
+app.config['SECRET_KEY'] = "p$0s#9nfb0E48Q3W049*@B"
 bootstrap = Bootstrap4(app)
 
 #CREATE DATABASE
 class Base(DeclarativeBase):
     pass
 #configure sQLite database, relative to the app instance folder
-app.config['SQLALCHEMY_DATABASE_URI'] = os.environ.get("DATABASE") 
+app.config['SQLALCHEMY_DATABASE_URI'] = "sqlite:///business-cards.db" 
 #create the extension
 db = SQLAlchemy(model_class=Base)
 # initialize the app with the extension
 db.init_app(app)
 
+ckeditor = CKEditor(app)
+
 #CREATE TABLE IN DB
 #define a model class to generate a table name
 class User(db.Model, UserMixin):
     url_path: Mapped[str] = mapped_column(String(250), primary_key=True)
-    name: Mapped[str] = mapped_column(String(250), nullable=False)
     email: Mapped[str] = mapped_column(String(250), unique=True, nullable=False)
     password: Mapped[str] = mapped_column(String(250), nullable=False)
-    job_title: Mapped[str] = mapped_column(String(250))
-    payment: Mapped[bool] = mapped_column(Boolean)
+    name: Mapped[str] = mapped_column(String(250), nullable=False)
+    job_title: Mapped[str] = mapped_column(String(250), nullable=True)
+    provided_profile_pic: Mapped[str] = mapped_column(String(250), nullable=True)
+    s3_profile_pic: Mapped[str] = mapped_column(String(250), nullable=True)
+    headline_description: Mapped[str] = mapped_column(Text, nullable=True)
+    displayed_email: Mapped[str] = mapped_column(String(250), nullable=True)
+    phone: Mapped[str] = mapped_column(String(250), nullable=True)
+    logo: Mapped[str] = mapped_column(String(250), nullable=True)
+    company: Mapped[str] = mapped_column(String(250), nullable=True)
+    location: Mapped[str] = mapped_column(String(250), nullable=True)
+    social_plat1: Mapped[str] = mapped_column(String(250), nullable=True)
+    social_link1: Mapped[str] = mapped_column(String(250), nullable=True)
+    social_plat2: Mapped[str] = mapped_column(String(250), nullable=True)
+    social_link2: Mapped[str] = mapped_column(String(250), nullable=True)
+    social_plat3: Mapped[str] = mapped_column(String(250), nullable=True)
+    social_link3: Mapped[str] = mapped_column(String(250), nullable=True)
+    social_plat4: Mapped[str] = mapped_column(String(250), nullable=True)
+    social_link4: Mapped[str] = mapped_column(String(250), nullable=True)
+    website_link: Mapped[str] = mapped_column(String(250), nullable=True)
+    venmo: Mapped[str] = mapped_column(String(250), nullable=True)
+    stripe: Mapped[str] = mapped_column(String(250), nullable=True)
+    body: Mapped[str] = mapped_column(Text, nullable=True)    
+    payment: Mapped[bool] = mapped_column(Boolean, nullable=True)
 
     def __repr__(self):
         return f"<User {self.name}>"
@@ -161,10 +185,16 @@ def edit_card(url_path):
     edit_card_form = EditCardForm()
     result = db.session.execute(db.select(User).where(User.url_path==url_path))
     user = result.scalar()
+    
+    # Show existing data
     if current_user.is_authenticated and current_user.url_path == user.url_path:
         edit_card_form.name.data = current_user.name
         edit_card_form.job_title.data = current_user.job_title
-        return render_template("edit_account.html", user=current_user, edit_card_form=edit_card_form)
+        if not user.displayed_email:
+            edit_card_form.displayed_email.data = current_user.email
+        else:
+            edit_card_form.displayed_email.data =user.displayed_email
+        return render_template("edit_card.html", user=current_user, edit_card_form=edit_card_form)
 
 
 if __name__ == "__main__":
