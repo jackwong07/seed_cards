@@ -1,6 +1,7 @@
 secrets.txt
 notes.txt
 example.py
+users.csv
 
 # Byte-compiled / optimized / DLL files
 __pycache__/
