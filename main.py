@@ -35,6 +35,8 @@ class User(db.Model, UserMixin):
     url_path: Mapped[str] = mapped_column(String(250), primary_key=True)
     email: Mapped[str] = mapped_column(String(250), unique=True, nullable=False)
     password: Mapped[str] = mapped_column(String(250), nullable=False)
+    #TODO: theme: Mapped[str] = mapped_column(String(250), nullable=True)
+    # colors: Mapped[str] = mapped_column(String(250), nullable=True)    
     name: Mapped[str] = mapped_column(String(250), nullable=False)
     job_title: Mapped[str] = mapped_column(String(250), nullable=True)
     provided_profile_pic: Mapped[str] = mapped_column(String(250), nullable=True)
@@ -197,8 +199,8 @@ def edit_card(url_path):
     
     # Show existing data
     if current_user.is_authenticated and current_user.url_path == user.url_path:
-        edit_card_form.theme.data = current_user.theme
-        edit_card_form.colors.data = current_user.colors
+        # edit_card_form.theme.data = current_user.theme
+        # edit_card_form.colors.data = current_user.colors
         edit_card_form.name.data = current_user.name
         edit_card_form.job_title.data = current_user.job_title
         edit_card_form.profile_picture.data = current_user.provided_profile_pic
@@ -225,32 +227,33 @@ def edit_card(url_path):
         # TODO: edit_card_form.work1.data = current_user.work1       
         edit_card_form.body.data = current_user.body
         
-        if request.method=="POST" and edit_card_form.validate_on_submit():
-            current_user.theme = edit_card_form.theme.data
-            current_user.colors = edit_card_form.colors.data
-            current_user.name = edit_card_form.name.data
-            current_user.job_title = edit_card_form.job_title.data
-            current_user.provided_profile_pic = edit_card_form.profile_picture.data
-            current_user.headline_description = edit_card_form.headline_description.data
-            user.displayed_email = edit_card_form.displayed_email.data
-            current_user.phone = edit_card_form.phone.data
-            current_user.logo = edit_card_form.logo.data
-            current_user.company = edit_card_form.company.data
-            current_user.location = edit_card_form.location.data
-            current_user.social_plat1 = edit_card_form.social_plat1.data
-            current_user.social_plat2 = edit_card_form.social_plat2.data
-            current_user.social_plat3 = edit_card_form.social_plat3.data
-            current_user.social_plat4 = edit_card_form.social_plat4.data
-            current_user.social_link1 = edit_card_form.social_link1.data
-            current_user.social_link2 = edit_card_form.social_link2.data
-            current_user.social_link3 = edit_card_form.social_link3.data
-            current_user.social_link4  = edit_card_form.social_link4.data               
-            current_user.website_link = edit_card_form.website_link.data
-            current_user.venmo = edit_card_form.venmo.data
-            current_user.stripe = edit_card_form.stripe.data
+        if request.method=="POST":
+            # current_user.theme = edit_card_form.theme.data
+            # current_user.colors = edit_card_form.colors.data
+            current_user.name = request.form.get('name')
+            current_user.job_title = request.form.get('job_title')
+            current_user.provided_profile_pic = request.form.get('provided_profile_pic')
+            current_user.headline_description = request.form.get('headline_description')
+            user.displayed_email = request.form.get('displayed_email')
+            current_user.phone = request.form.get('phone')
+            current_user.logo = request.form.get('logo')
+            current_user.company = request.form.get('company')
+            current_user.location = request.form.get('location')
+            current_user.social_plat1 = request.form.get('social_plat1')
+            current_user.social_plat2 = request.form.get('social_plat2')
+            current_user.social_plat3 = request.form.get('social_plat3')
+            current_user.social_plat4 = request.form.get('social_plat4')
+            current_user.social_link1 = request.form.get('social_link1')
+            current_user.social_link2 = request.form.get('social_link2')
+            current_user.social_link3 = request.form.get('social_link3')
+            current_user.social_link4  = request.form.get('social_link4')             
+            current_user.website_link = request.form.get('website_link')
+            current_user.venmo = request.form.get('venmo')
+            current_user.stripe = request.form.get('stripe')
             # TODO: edit_card_form.work1.data = current_user.work1       
-            current_user.body = edit_card_form.body.data
+            current_user.body = request.form.get('body')
             db.session.commit()
+            return redirect(url_for('card', url_path=current_user.url_path))   
         return render_template("edit_card.html", user=current_user, edit_card_form=edit_card_form)
 
 

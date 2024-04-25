@@ -24,13 +24,14 @@
 
 
   <div class="card bg-dark text-white" style="max-width: 600px;">
-    <img src="https://mdbcdn.b-cdn.net/img/new/slides/017.webp" class="card-img" alt="Stony Beach"/>
+    <img src="/static/images/profile.jpg" class="card-img" alt="Profile Picture"/>
     <div class="card-img-overlay" style="background-color: hsla(336, 42%, 92%, 0.2)">
       
       <div class="row d-flex justify-content-center">
         
         <div class="card text-center align-items-center" style="width: 18rem;">
-            <img class="profile-pic" style="width: 7rem;" src="/static/images/profile.jpg" class="card-img-top" alt="Profile Pic" />
+          <p class="card-text"><b>{{ user.name }}</b> | <em>American Express</em></p>
+          <p class="card-text"><b>{{ user.job_title }}</b> | <em>American Express</em></p>
           <div class="card-body">
             <h5 class="card-title">{{ user.name }}</h5>
             <p class="card-text"><b>{{ user.job_title }}</b> | <em>American Express</em></p>
