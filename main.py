@@ -12,6 +12,7 @@ from flask_ckeditor import CKEditor
 
 #CREATE AND INITIALIZE FLASK APP
 app = Flask(__name__, template_folder='templates')
+#TODO: set as environment variable 
 app.config['SECRET_KEY'] = "p$0s#9nfb0E48Q3W049*@B"
 bootstrap = Bootstrap4(app)
 
@@ -19,6 +20,7 @@ bootstrap = Bootstrap4(app)
 class Base(DeclarativeBase):
     pass
 #configure sQLite database, relative to the app instance folder
+#TODO: set as environment variable 
 app.config['SQLALCHEMY_DATABASE_URI'] = "sqlite:///business-cards.db" 
 #create the extension
 db = SQLAlchemy(model_class=Base)
@@ -54,6 +56,11 @@ class User(db.Model, UserMixin):
     website_link: Mapped[str] = mapped_column(String(250), nullable=True)
     venmo: Mapped[str] = mapped_column(String(250), nullable=True)
     stripe: Mapped[str] = mapped_column(String(250), nullable=True)
+    #TODO: work1: Mapped[str] = mapped_column(String(250), nullable=True)
+    # work2: Mapped[str] = mapped_column(String(250), nullable=True)
+    # work3: Mapped[str] = mapped_column(String(250), nullable=True)
+    # work4: Mapped[str] = mapped_column(String(250), nullable=True)
+    # work5: Mapped[str] = mapped_column(String(250), nullable=True)    
     body: Mapped[str] = mapped_column(Text, nullable=True)    
     payment: Mapped[bool] = mapped_column(Boolean, nullable=True)
 
@@ -102,6 +109,8 @@ def register():
                 name = request.form["name"],
                 job_title = request.form["job_title"],
                 payment=False,
+                theme="minimalist",
+                colors="light",
             )
             db.session.add(new_user)
             db.session.commit()
@@ -133,7 +142,7 @@ def payment():
 def login():
     login_form = LogInForm()
     session.pop('_flashes', None)
-    if request.method=="POST":
+    if request.method=="POST" and login_form.validate_on_submit():
         form_email = request.form.get('email')
         form_password = request.form.get('password')
         result = db.session.execute(db.select(User).where(User.email == form_email))
@@ -188,12 +197,60 @@ def edit_card(url_path):
     
     # Show existing data
     if current_user.is_authenticated and current_user.url_path == user.url_path:
+        edit_card_form.theme.data = current_user.theme
+        edit_card_form.colors.data = current_user.colors
         edit_card_form.name.data = current_user.name
         edit_card_form.job_title.data = current_user.job_title
+        edit_card_form.profile_picture.data = current_user.provided_profile_pic
+        edit_card_form.headline_description.data = current_user.headline_description
         if not user.displayed_email:
             edit_card_form.displayed_email.data = current_user.email
         else:
             edit_card_form.displayed_email.data =user.displayed_email
+        edit_card_form.phone.data = current_user.phone
+        edit_card_form.logo.data = current_user.logo
+        edit_card_form.company.data = current_user.company
+        edit_card_form.location.data = current_user.location
+        edit_card_form.social_plat1.data = current_user.social_plat1
+        edit_card_form.social_plat2.data = current_user.social_plat2
+        edit_card_form.social_plat3.data = current_user.social_plat3
+        edit_card_form.social_plat4.data = current_user.social_plat4
+        edit_card_form.social_link1.data = current_user.social_link1
+        edit_card_form.social_link2.data = current_user.social_link2
+        edit_card_form.social_link3.data = current_user.social_link3
+        edit_card_form.social_link4.data = current_user.social_link4                
+        edit_card_form.website_link.data = current_user.website_link
+        edit_card_form.venmo.data = current_user.venmo
+        edit_card_form.stripe.data = current_user.stripe
+        # TODO: edit_card_form.work1.data = current_user.work1       
+        edit_card_form.body.data = current_user.body
+        
+        if request.method=="POST" and edit_card_form.validate_on_submit():
+            current_user.theme = edit_card_form.theme.data
+            current_user.colors = edit_card_form.colors.data
+            current_user.name = edit_card_form.name.data
+            current_user.job_title = edit_card_form.job_title.data
+            current_user.provided_profile_pic = edit_card_form.profile_picture.data
+            current_user.headline_description = edit_card_form.headline_description.data
+            user.displayed_email = edit_card_form.displayed_email.data
+            current_user.phone = edit_card_form.phone.data
+            current_user.logo = edit_card_form.logo.data
+            current_user.company = edit_card_form.company.data
+            current_user.location = edit_card_form.location.data
+            current_user.social_plat1 = edit_card_form.social_plat1.data
+            current_user.social_plat2 = edit_card_form.social_plat2.data
+            current_user.social_plat3 = edit_card_form.social_plat3.data
+            current_user.social_plat4 = edit_card_form.social_plat4.data
+            current_user.social_link1 = edit_card_form.social_link1.data
+            current_user.social_link2 = edit_card_form.social_link2.data
+            current_user.social_link3 = edit_card_form.social_link3.data
+            current_user.social_link4  = edit_card_form.social_link4.data               
+            current_user.website_link = edit_card_form.website_link.data
+            current_user.venmo = edit_card_form.venmo.data
+            current_user.stripe = edit_card_form.stripe.data
+            # TODO: edit_card_form.work1.data = current_user.work1       
+            current_user.body = edit_card_form.body.data
+            db.session.commit()
         return render_template("edit_card.html", user=current_user, edit_card_form=edit_card_form)
 
 

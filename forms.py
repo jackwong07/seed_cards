@@ -40,12 +40,12 @@ class LogInForm(FlaskForm):
 
 
 class EditCardForm(FlaskForm):
-    theme = SelectField(label="Theme", choices=[('artist'), ('corporate'), ('bold')])
-    colors = SelectField(label="Colors", choices=[('dark'), ('light'), ('soft')])
+    theme = SelectField(label="Theme", choices=[('minimalist'), ('artist'), ('magazine'), ('bold')])
+    colors = SelectField(label="Colors", choices=[('light'), ('dark'), ('soft')])
     name = StringField(label='Name')
     job_title = StringField(label='Job Title')
-    picture = FileField(label='Profile Picture')
-    headline_description = CKEditorField(label='Short Description')
+    profile_picture = FileField(label='Profile Picture')
+    headline_description = CKEditorField(label='Short Headline Description')
     displayed_email = StringField(label='Email')
     phone = StringField(label="Phone")
     logo = FileField(label='Logo')
