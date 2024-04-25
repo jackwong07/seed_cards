@@ -9,6 +9,9 @@ from flask_login import UserMixin, login_user, LoginManager, login_required, cur
 from forms import SignupForm, EditAccountForm, EditCardForm, PaymentForm, LogInForm, EditCardForm
 from flask_ckeditor import CKEditor
 from PIL import Image
+import qrcode
+import io
+import base64
 
 #CREATE AND INITIALIZE FLASK APP
 app = Flask(__name__, template_folder='templates')
@@ -168,18 +171,27 @@ def card(url_path):
     result = db.session.execute(db.select(User).where(User.url_path==url_path))
     user = result.scalar()
     if user.payment ==True:
-        #Image resizing
-        img = Image.open('static/images/profile.jpg')
-        img.load()
-        img.thumbnail((400, 200))
 
-        
+        #Generate QR code
+
+        qr = qrcode.QRCode(version=3, box_size=5, border=5, error_correction=qrcode.constants.ERROR_CORRECT_H)
+        qr_link = f"http://127.0.0.1:5000/card/{url_path}"
+        qr.add_data(qr_link)
+        qr.make(fit=True)
+        qr_img = qr.make_image(fill_color="black", back_color="white")
+
+        buffer = io.BytesIO()
+        buffer.seek(0)
+        buffer.truncate(0)
+        qr_img.save(buffer, format="png")
+        qr_encoded = base64.b64encode(buffer.getvalue())
+
+
+        #Show edit menu if authenticated
         if current_user.is_authenticated and current_user.url_path == user.url_path:
             can_edit=True
-            print("authenticated")
-            #show edit button
-            return render_template("bus_card.html", user=user, can_edit=can_edit, img=img)
-        return render_template("bus_card.html", user=user, img=img)
+            return render_template("bus_card.html", user=user, can_edit=can_edit, qr_img=qr_encoded.decode('utf-8'))
+        return render_template("bus_card.html", user=user, qr_img=qr_encoded.decode('utf-8'))
     else:
         return "Sorry, user doesn't exist"
 
