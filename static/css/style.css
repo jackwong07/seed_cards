@@ -1,0 +1,37 @@
+.form-signin {
+    max-width: 330px;
+    padding: 1rem;
+}
+
+.box {
+    padding-left: 2rem;
+    padding-right: 2rem;
+}
+
+.profile-pic{
+    max-height: 250px;
+    width:fit-content;
+    align-self: center;
+}
+
+.link-back{
+    align-content: right;
+    font-size: x-small;
+}
+
+header {
+    height: 100px;
+    background-color: rgb(255, 255, 255);
+  }
+  .hero {
+    padding-bottom: 37.5%; /* = ( 600 / 1600 ) x 100 */
+    background-image: url( 'http://placehold.it/1600x600/A00' );
+    background-size: cover;
+  }
+
+  .mask-custom {
+    backdrop-filter: contrast(140%) brightness(100%) saturate(100%) sepia(50%) hue-rotate(0deg) grayscale(0%) invert(0%) blur(0px);
+    mix-blend-mode: lighten;
+    background: rgba(161, 44, 199, 0.31);
+    opacity: 1;
+  }

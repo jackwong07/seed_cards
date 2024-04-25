@@ -1,0 +1,22 @@
+{% include "header.html" %}
+
+
+    <!-- Title -->
+    <div class="container col-xxl-8 px-4 py-2">
+        <div class="row flex-lg-row-reverse align-items-center g-5 py-5">
+          <div class="col-10 col-sm-8 col-lg-6">
+            <img src="./static/card_examples.png" class="d-block mx-lg-auto img-fluid" alt="Digital Business Card Example" width="700" height="500" loading="lazy">
+          </div>
+          <div class="col-lg-6">
+            <h1 class="display-5 fw-bold text-body-emphasis lh-1 mb-3">Digital Business Card</h1>
+            <p class="lead">Create a digital business card, share a QR code, add to you email signature, make a phone shortcut without downloading another app. Pricing starts at $1. Analytics is an additional $2. Custom domain adds another $2.</p>
+            <div class="d-grid gap-2 d-md-flex justify-content-md-start">
+              <a class="btn btn-primary btn-lg px-4 me-md-2" href="{{url_for('register')}}" role="button">Create Card</a>
+            </div>
+          </div>
+        </div>
+      </div>
+
+  <script src="https://cdn.jsdelivr.net/npm/bootstrap@5.3.3/dist/js/bootstrap.bundle.min.js" integrity="sha384-YvpcrYf0tY3lHB60NNkmXc5s9fDVZLESaAA55NDzOxhy9GkcIdslK1eN7N6jIeHz" crossorigin="anonymous"></script>
+</body>
+</html>
