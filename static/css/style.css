@@ -74,3 +74,9 @@ body.magazine {
   padding-right: 15px;
   margin-top: 10px;
 }
+
+.body-text.minimalist-template{
+  padding: 10px;
+  margin: 10px;
+  color: red;
+}

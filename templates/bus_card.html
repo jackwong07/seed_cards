@@ -29,10 +29,7 @@
 <!-- Profile Image-->
 <header
   class="masthead hero"
-  style="background-image: url('/static/images/profile_cropped.jpg')"
-
-
-
+  style="background-image: url('/static/images/profile_cropped.jpg')">
   <div class="container position-relative px-3 px-lg-4">
     <div class="row gx-4 gx-lg-5 justify-content-left">
       <div class=" col-md-10 col-lg-8 col-xl-7">
@@ -44,7 +41,6 @@
         </div>        
       </div>
     </div>
-
 </header>
 
 
@@ -53,16 +49,27 @@
 
   <div class="row d-flex justify-content-left">
     <div class="text-left">
-        <p class="card-text text-start"><small>{{user.headline_description}}</small></p>
-        <a href="xyzabc.com" class="card-link" style="font-size: 14pt">{{user.email}}</a>          
-        <p class="card-text text-start"style="font-size: 12pt">+1 {{user.phone}}</p>
-  <br/>
+        <p class="card-text text-start"><small>{{user.headline_description| safe}}</small></p>
+        <p style="font-size: 14pt">{{user.company}} | {{ user.location}}</p>
+        <a href="xyzabc.com" class="card-link" style="font-size: 14pt">{{user.website_link}}</a>
+    <hr/>
       <div class="card-body">
-        <a href="instagram.com" class="pe-4"><img src="/static/social_icons/instagram.svg" width="35" height="35"/></a>
-        <a href="linkedin.com" class="pe-4"><img src="/static/social_icons/linkedin.svg" width="35" height="35"/></a>
-        <a href="github.com" class="pe-4"><img src="/static/social_icons/github.svg" width="35" height="35"/></a>
-        <a href="github.com" class="pe-4"><img src="/static/social_icons/tiktok.svg" width="35" height="35"/></a>
+        {% if user.social_plat1 and user.social_plat1!="" %}
+        <a href="{{user.social_link1}}" class="pe-4"><img src="/static/social_icons/{{user.social_plat1}}.svg" width="35" height="35"/></a>
+        {% endif %}
+        {% if user.social_plat2 and user.social_plat2!="" %}
+        <a href="{{user.social_link2}}" class="pe-4"><img src="/static/social_icons/{{user.social_plat2}}.svg" width="35" height="35"/></a>
+        {% endif %}
+        {% if user.social_plat3 and user.social_plat3!="" %}
+        <a href="{{user.social_link3}}" class="pe-4"><img src="/static/social_icons/{{user.social_plat3}}.svg" width="35" height="35"/></a>
+        {% endif %}
+        {% if user.social_plat4 and user.social_plat14!="" %}
+        <a href="{{user.social_link4}}" class="pe-4"><img src="/static/social_icons/{{user.social_plat4}}.svg" width="35" height="35"/></a>
+        {% endif %}
       </div>
+    <br>
+      <a href="xyzabc.com" class="card-link" style="font-size: 14pt">{{user.displayed_email}}</a>          
+      <p class="card-text text-start"style="font-size: 12pt">+1 {{user.phone}}</p>
 
     </div>
   </div>
@@ -72,7 +79,7 @@
     <button type="button" class="btn btn-warning" href="#" style="width: 150px">Save Contact</button>
   </div>
   <br/>
-
+  <br/>
 
 <!-- Works -->
   <div class="card text-left">
@@ -100,10 +107,10 @@
   </div>
   <br/>
 
-  
+
 <!-- Description -->
-  <div class="card text-left">
-    <p class="card-text text-start m-3">{{user.body}}</p>
+  <div>
+    <p class="body-text minimalist-template card-text text-start">{{user.body | safe}}</p>
   </div>
 
   

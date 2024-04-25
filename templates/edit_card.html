@@ -10,7 +10,10 @@
     <div class="container d-flex justify-content-center">
       <main class="form-signin box">
         <h1 class="h3 mb-3 fw-normal">Edit Card Details</h1>
-        {{ render_form(edit_card_form, novalidate=True) }}
+        {{ ckeditor.load() }} 
+        {{ ckeditor.config(name='body') }} 
+        {{render_form(edit_card_form, novalidate=True, button_map={"submit": "primary"}) }} 
+
       </main>
 
     </div>
