@@ -194,8 +194,7 @@ def card(url_path):
     user = result.scalar()
     if user.payment ==True:
 
-        #Generate QR code
-
+        # GENERATE QR CODE
         qr = qrcode.QRCode(version=3, box_size=5, border=5, error_correction=qrcode.constants.ERROR_CORRECT_H)
         qr_link = f"http://127.0.0.1:5000/card/{url_path}"
         qr.add_data(qr_link)
@@ -208,12 +207,19 @@ def card(url_path):
         qr_img.save(buffer, format="png")
         qr_encoded = base64.b64encode(buffer.getvalue())
 
+        # GRAB IMAGES FROM S3
+        #TODO: edit key path to dynamic user.s3_work_names
+        work1_url = s3.generate_presigned_url("get_object", Params={"Bucket": BUCKET_NAME, "Key": f"{url_path}_abstract.jpg"}, ExpiresIn=30)
+        work2_url = s3.generate_presigned_url("get_object", Params={"Bucket": BUCKET_NAME, "Key": f"{url_path}_chairs.jpg"}, ExpiresIn=30)
+        work3_url = s3.generate_presigned_url("get_object", Params={"Bucket": BUCKET_NAME, "Key": f"{url_path}_city.jpg"}, ExpiresIn=30)
+        work4_url = s3.generate_presigned_url("get_object", Params={"Bucket": BUCKET_NAME, "Key": f"{url_path}_forest_background.jpg"}, ExpiresIn=30)
+        work5_url = s3.generate_presigned_url("get_object", Params={"Bucket": BUCKET_NAME, "Key": f"{url_path}_mobile_background.jpeg"}, ExpiresIn=30)
 
-        #Show edit menu if authenticated
+        # PASS CAN_EDIT FLAG TO SHOW MENU IF USER IS AUTHENTICATED
         if current_user.is_authenticated and current_user.url_path == user.url_path:
             can_edit=True
-            return render_template("bus_card.html", user=user, can_edit=can_edit, qr_img=qr_encoded.decode('utf-8'))
-        return render_template("bus_card.html", user=user, qr_img=qr_encoded.decode('utf-8'))
+            return render_template("bus_card.html", user=user, can_edit=can_edit, qr_img=qr_encoded.decode('utf-8'), work1_url=work1_url, work2_url=work2_url, work3_url=work3_url, work4_url=work4_url, work5_url=work5_url)
+        return render_template("bus_card.html", user=user, qr_img=qr_encoded.decode('utf-8'), work1_url=work1_url, work2_url=work2_url, work3_url=work3_url, work4_url=work4_url, work5_url=work5_url)
     else:
         return "Sorry, user doesn't exist"
 
