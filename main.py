@@ -5,6 +5,7 @@ from flask_sqlalchemy import SQLAlchemy
 from sqlalchemy.orm import DeclarativeBase, Mapped, mapped_column
 from sqlalchemy import Integer, String, Float, Boolean, Text
 from werkzeug.security import generate_password_hash, check_password_hash
+from werkzeug.utils import secure_filename
 from flask_login import UserMixin, login_user, LoginManager, login_required, current_user, logout_user
 from forms import SignupForm, EditAccountForm, EditCardForm, PaymentForm, LogInForm, EditCardForm
 from flask_ckeditor import CKEditor
@@ -12,12 +13,19 @@ from PIL import Image
 import qrcode
 import io
 import base64
+import boto3
+from botocore.client import Config
+
+
+
 
 #CREATE AND INITIALIZE FLASK APP
 app = Flask(__name__, template_folder='templates')
 #TODO: set as environment variable 
 app.config['SECRET_KEY'] = "p$0s#9nfb0E48Q3W049*@B"
 bootstrap = Bootstrap4(app)
+app.config['MAX_CONTENT_LENGTH'] = 16 * 1024 * 1024
+
 
 #CREATE DATABASE
 class Base(DeclarativeBase):
@@ -87,6 +95,20 @@ login_manager.init_app(app)
 @login_manager.user_loader
 def load_user(user_id):
     return db.get_or_404(User, user_id)
+
+
+# AWS S3 Bucket Initialization and Connection
+aws_access_key_id = os.environ.get("AWS_ACCESS_KEY")
+aws_secret_access_key = os.environ.get("AWS_SECRET_ACCESS_KEY")
+BUCKET_NAME = "digibusiness-card-bucket"
+
+s3 = boto3.client('s3',
+    aws_access_key_id=aws_access_key_id,
+    aws_secret_access_key=aws_secret_access_key,
+    config=Config(signature_version='s3v4'),
+    region_name='us-east-2',
+    endpoint_url='https://s3.us-east-2.amazonaws.com',
+)
 
 
 
@@ -246,6 +268,46 @@ def edit_card(url_path):
         edit_card_form.body.data = current_user.body
         
         if request.method=="POST":
+            work1 = edit_card_form.work1.data
+            work2 = edit_card_form.work2.data
+            work3 = edit_card_form.work3.data
+            work4 = edit_card_form.work4.data
+            work5 = edit_card_form.work5.data
+            # TODO: Save these to database
+            work1_name=work1.filename
+            work2_name=work2.filename
+            work3_name=work3.filename
+            work4_name=work4.filename
+            work5_name=work5.filename
+            #TODO: save these as AWS S3 filenames
+            s3_work1_name = secure_filename(work1_name)
+            s3_work2_name = secure_filename(work2_name)
+            s3_work3_name = secure_filename(work3_name)
+            s3_work4_name = secure_filename(work4_name)
+            s3_work5_name = secure_filename(work5_name)
+
+            work_dictionary ={
+                s3_work1_name: work1,
+                s3_work2_name: work2,
+                s3_work3_name: work3,
+                s3_work4_name: work4,
+                s3_work5_name: work5,
+            }
+            
+            for s3_work_name, work in work_dictionary.items():
+                img = Image.open(work)
+                width, height= img.size
+                if width>600:
+                    img.thumbnail((600,1080))
+                buffer=io.BytesIO()
+                img.save(buffer, format="JPEG")
+                buffer.seek(0)
+                s3.put_object(
+                    Bucket=BUCKET_NAME,
+                    Key=f"{url_path}_{s3_work_name}",
+                    Body=buffer)
+                        
+            
             # current_user.theme = edit_card_form.theme.data
             # current_user.colors = edit_card_form.colors.data
             current_user.name = request.form.get('name')
@@ -268,7 +330,8 @@ def edit_card(url_path):
             current_user.website_link = request.form.get('website_link')
             current_user.venmo = request.form.get('venmo')
             current_user.stripe = request.form.get('stripe')
-            # TODO: edit_card_form.work1.data = current_user.work1       
+            # TODO: current_user.work1 = work1_name 
+            # TODO: current_user.s3_work1 = s3_work1_name
             current_user.body = request.form.get('body')
             db.session.commit()
             return redirect(url_for('card', url_path=current_user.url_path))   
