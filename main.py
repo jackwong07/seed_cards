@@ -1,4 +1,4 @@
-from flask import Flask, render_template, redirect, url_for, request, session, jsonify, flash
+from flask import Flask, render_template, redirect, url_for, request, session, send_file, flash
 import os
 from flask_bootstrap import Bootstrap4
 from flask_sqlalchemy import SQLAlchemy
@@ -7,7 +7,7 @@ from sqlalchemy import Integer, String, Float, Boolean, Text
 from werkzeug.security import generate_password_hash, check_password_hash
 from werkzeug.utils import secure_filename
 from flask_login import UserMixin, login_user, LoginManager, login_required, current_user, logout_user
-from forms import SignupForm, EditAccountForm, EditCardForm, PaymentForm, LogInForm, EditCardForm
+from forms import SignupForm, EditAccountForm, EditCardForm, PaymentForm, LogInForm, EditCardForm, VCard
 from flask_ckeditor import CKEditor
 from PIL import Image
 import qrcode
@@ -111,11 +111,28 @@ s3 = boto3.client('s3',
 )
 
 
+#GENERATE VCF FILE TO SAVE CONTACTS
+def get_vcard(vcard: VCard) -> io.BytesIO:
+    # Render the vcard template with the user's data,
+    with app.app_context():
+        content = render_template('template.vcf.jinja2', **vcard.__dict__)
+    # Remove all the extra lines that jinja2 leaves in there. (ugh.)
+    content = '\n'.join(filter(lambda line: bool(line.strip()), content.split('\n')))
+    # Create a file-like object to send to the client
+    file_ = io.BytesIO()
+    file_.write(content.encode('UTF-8'))
+    file_.seek(0)
+
+    return file_
+
+
+
 
 # CREATE ROUTES AND RENDER HTML TEMPLATES
 @app.route('/')
 def home():
     return render_template("index.html")
+
 
 @app.route('/register', methods=["GET","POST"])
 def register():
@@ -206,7 +223,7 @@ def card(url_path):
         buffer.truncate(0)
         qr_img.save(buffer, format="png")
         qr_encoded = base64.b64encode(buffer.getvalue())
-
+        
         # GRAB IMAGES FROM S3
         #TODO: edit key path to dynamic user.s3_work_names
         work1_url = s3.generate_presigned_url("get_object", Params={"Bucket": BUCKET_NAME, "Key": f"{url_path}_abstract.jpg"}, ExpiresIn=30)
@@ -223,6 +240,20 @@ def card(url_path):
     else:
         return "Sorry, user doesn't exist"
 
+
+@app.route("/vcard/download/<url_path>")
+def generate_vcf(url_path):
+    result = db.session.execute(db.select(User).where(User.url_path==url_path))
+    user = result.scalar()
+    user_vcard = VCard(
+        display_name = user.name,
+        job_title = user.job_title,
+        company = user.company,
+        email = user.displayed_email,
+        address = user.location,
+        phone = user.phone
+        ) 
+    return send_file(get_vcard(user_vcard), mimetype='text/vcard')
 
 # EDIT ROUTES - USER MUST BE LOGGED IN
 @app.route('/card/edit-account/<url_path>', methods=["GET","POST"])

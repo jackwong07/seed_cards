@@ -76,3 +76,16 @@ class EditAccountForm(FlaskForm):
     confirm  = PasswordField('Repeat New Password')
     url_path = StringField(label="Unique URL path", validators=[DataRequired()])
     submit = SubmitField(label="Update")
+    
+    
+# SEND CONTACT INFO as VCF
+class VCard():
+    def __init__(self, display_name, job_title, company, email, phone, address):
+        self.display_name = display_name
+        self.job_title = job_title
+        self.company = company
+        self.email = email
+        self.phone = phone
+        self.address = address
+    
+    
