@@ -45,7 +45,7 @@
     <div class="text-left">
       <p style="font-size: 14pt">{{user.company}} | {{ user.location}}</p>
       <p class="card-text text-start"><small>{{user.headline_description| safe}}</small></p>
-      <a href="xyzabc.com" class="card-link" style="font-size: 14pt">{{user.website_link}}</a>
+      <a href="{{user.website_link}}" class="card-link" style="font-size: 14pt">{{user.website_link}}</a>
     <hr/>
       <div class="card-body">
         {% if user.social_plat1 and user.social_plat1!="" %}
@@ -62,7 +62,7 @@
         {% endif %}
       </div>
     <br>
-      <a href="xyzabc.com" class="card-link" style="font-size: 14pt">{{user.displayed_email}}</a>          
+      <a href="mailto: {{user.displayed_email}}" class="card-link" style="font-size: 14pt">{{user.displayed_email}}</a>          
       <p class="card-text text-start"style="font-size: 12pt">+1 {{user.phone}}</p>
 
     </div>

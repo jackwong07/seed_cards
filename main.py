@@ -264,8 +264,11 @@ def edit_account(url_path):
     user = result.scalar()
     if current_user.is_authenticated and current_user.url_path == user.url_path:
         edit_account_form.email.data = current_user.email
+        # TODO: update password
+        # edit_account_form.password.data = check_password_hash(current_user.password)
         edit_account_form.url_path.data = current_user.url_path
         return render_template("edit_account.html", user=current_user, edit_account_form=edit_account_form)
+
 
 @app.route('/card/edit-card/<url_path>', methods=["GET","POST"])
 @login_required

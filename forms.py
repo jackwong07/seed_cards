@@ -46,7 +46,7 @@ class EditCardForm(FlaskForm):
     job_title = StringField(label='Job Title')
     profile_picture = FileField(label='Profile Picture')
     headline_description = CKEditorField(label='Short Headline Description')
-    displayed_email = StringField(label='Email')
+    displayed_email = StringField(label='Email displayed on card')
     phone = StringField(label="Phone")
     logo = FileField(label='Logo')
     company = StringField(label='Company')
@@ -71,13 +71,13 @@ class EditCardForm(FlaskForm):
     submit = SubmitField(label="Update")
 
 class EditAccountForm(FlaskForm):
-    email = StringField(label='Email', validators=[validate_email])
+    email = StringField(label='Account Email to log in', validators=[validate_email])
     password = PasswordField(label='New Password', validators=[DataRequired(), EqualTo('confirm', message='Passwords must match')])
     confirm  = PasswordField('Repeat New Password')
     url_path = StringField(label="Unique URL path", validators=[DataRequired()])
     submit = SubmitField(label="Update")
     
-    
+
 # SEND CONTACT INFO as VCF
 class VCard():
     def __init__(self, display_name, job_title, company, email, phone, address):
