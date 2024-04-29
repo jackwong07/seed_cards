@@ -18,6 +18,7 @@
   <div class="d-flex flex-wrap justify-content-left mb-2 border-bottom">
     <ul class="nav">
       <li class="nav-item"><a href="{{ url_for('edit_card', url_path=current_user.url_path)}}" class="nav-link magazine_temp">Edit Card</a></li>
+      <li class="nav-item"><a href="{{ url_for('edit_images', url_path=current_user.url_path)}}" class="nav-link magazine_temp">Edit Images</a></li>      
       <li class="nav-item"><a href="{{ url_for('edit_account', url_path=current_user.url_path)}}" class="nav-link magazine_temp">Edit Account</a></li>
     </ul>
   </div>
@@ -27,7 +28,10 @@
 
 
 <!-- Profile Image-->
-<div class="hero" style="position: relative; background-image: url('/static/images/profile_cropped.jpg')">
+<div class="hero" style="position: relative; background-image: url('{{profile_pic}}')">
+  
+
+
   <div class="justify-content-left position-absolute" style="bottom:10px">
     <div class="site-heading magazine_temp">
       <h1>{{ user.name }}</h1>
@@ -43,8 +47,15 @@
 <br>
   <div class="row d-flex justify-content-left">
     <div class="text-left">
-      <p style="font-size: 14pt">{{user.company}} | {{ user.location}}</p>
-      <p class="card-text text-start"><small>{{user.headline_description| safe}}</small></p>
+      {% if user.company or user.location %}
+        <p style="font-size: 14pt">{{user.company}} |
+        {% endif %}
+        {% if user.company or user.location %}
+        {{ user.location}}
+        {% endif %}
+      </p>
+
+        <p class="card-text text-start"><small>{{user.headline_description| safe}}</small></p>
       <a href="{{user.website_link}}" class="card-link" style="font-size: 14pt">{{user.website_link}}</a>
     <hr/>
       <div class="card-body">
@@ -107,30 +118,19 @@
   <br/>
 
 <!-- Works -->
+{% if work1_url: %}
   <div class="card text-left">
-    <img src="{{work1_url}}"></img>
+    <img id="work-image" src="{{work1_url}}"></img>
   </div>
   <br/>
+{% endif %}
 
+{% if work2_url: %}
   <div class="card text-left">
-    <img src="{{work2_url}}"></img>
+    <img id="work-image" src="{{work2_url}}"></img>
   </div>
   <br/>
-
-  <div class="card text-left">
-    <img src="{{work3_url}}"></img>
-  </div>
-  <br/>
-
-  <div class="card text-left">
-    <img src="{{work4_url}}"></img>
-  </div>
-  <br/>
-
-  <div class="card text-left">
-    <img src="{{work5_url}}"></img>
-  </div>
-  <br/>
+{% endif %}
 
 
 <!-- Description -->

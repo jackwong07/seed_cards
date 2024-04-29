@@ -1,0 +1,57 @@
+{% include "header.html" %}
+
+    {% extends "base.html" %}
+    {% block title %}Edit Images{% endblock %}
+    <!-- Form add divs to each element to center them -->
+    {% from 'bootstrap4/form.html' import render_form %}
+
+    {% block content %}
+
+
+        <div class="container d-flex justify-content-center">
+          <main class="form-signin box">
+          <form action method="post" class="form" enctype="multipart/form-data" role="form" novalidate>
+            <h1 class="h3 mb-3 fw-normal">Update Images</h1>
+        
+            <div>
+        {% if user.provided_profile_pic %}
+          <div class="card" style="width: 12rem;">
+          <img src="{{profile_pic_url}}" class="card-img-top" alt="{{user.provided_profile_pic}}">
+          <div class="card-body">
+          <p class="card-text">{{user.provided_profile_pic}}</p>
+          </div>
+          </div>
+        {%endif%}
+        <div class="form-group"><label class="form-control-label" for="profile">Update Profile Picture</label>
+          <input class="form-control-file" id="profile" name="profile" type="file" value={{current_user.provided_profile_pic}}>
+        </div>
+      </div>
+
+
+      <div>
+        {% if user.work1 %}
+          <div class="card" style="width: 12rem;">
+          <img src="{{work1_url}}" class="card-img-top" alt="{{user.work1}}">
+          <div class="card-body">
+          <p class="card-text">{{user.work1}}</p>
+          </div>
+          </div>
+        {%endif%}
+        <div class="form-group"><label class="form-control-label" for="work1">Update Work 1</label>
+          <input class="form-control-file" id="work1" name="work1" type="file" value={{current_user.work1}}>
+        </div>
+      </div>
+
+
+        <div class="form-group">
+          <input class="btn btn-primary btn-md" id="submit" name="submit" type="submit" value="Update">
+        </div>
+        </form>
+        </main>
+      </div> 
+
+    {% endblock %}
+    </div>
+  <script src="https://cdn.jsdelivr.net/npm/bootstrap@5.3.3/dist/js/bootstrap.bundle.min.js" integrity="sha384-YvpcrYf0tY3lHB60NNkmXc5s9fDVZLESaAA55NDzOxhy9GkcIdslK1eN7N6jIeHz" crossorigin="anonymous"></script>
+</body>
+</html>

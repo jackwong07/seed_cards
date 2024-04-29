@@ -24,7 +24,6 @@ class SignupForm(FlaskForm):
     name = StringField(label='Name', validators=[DataRequired()])
     job_title = StringField(label='Job Title', validators=[DataRequired()])
     picture = FileField(label='Profile Picture (optional)')
-    #need to edit this
     submit = SubmitField(label="Submit")
 
 #USE STRIPE
@@ -44,11 +43,9 @@ class EditCardForm(FlaskForm):
     colors = SelectField(label="Colors", choices=[('light'), ('dark'), ('soft')])
     name = StringField(label='Name')
     job_title = StringField(label='Job Title')
-    profile_picture = FileField(label='Profile Picture')
     headline_description = CKEditorField(label='Short Headline Description')
     displayed_email = StringField(label='Email displayed on card')
     phone = StringField(label="Phone")
-    logo = FileField(label='Logo')
     company = StringField(label='Company')
     location = StringField(label="Location")
     social_plat1 = SelectField(label="Social Platform 1", choices=[(''), ('Instagram'), ('Github'), ('LinkedIn'), ('TikTok')])
@@ -62,13 +59,19 @@ class EditCardForm(FlaskForm):
     website_link = StringField(label="Website")
     venmo = StringField(label="Venmo")
     stripe = StringField(label="Stripe")
+    body = CKEditorField(label="Long Description")
+    submit = SubmitField(label="Update")
+
+class EditImagesForm(FlaskForm):
+    profile_picture = FileField(label='Profile Picture')
+    #logo = FileField(label='Logo')
     work1 = FileField(label='Work 1')
     work2 = FileField(label='Work 2')
     work3 = FileField(label='Work 3')
     work4 = FileField(label='Work 4')
     work5 = FileField(label='Work 5')
-    body = CKEditorField(label="Long Description")
     submit = SubmitField(label="Update")
+
 
 class EditAccountForm(FlaskForm):
     email = StringField(label='Account Email to log in', validators=[validate_email])

@@ -26,7 +26,6 @@ header {
   .hero {
     padding-bottom: 37.5%; /* = ( 600 / 1600 ) x 100 */
     background-color: rgb(123, 161, 183);
-    background-image: url( 'https://images.unsplash.com/photo-1713781654565-ae4aef23f75b?q=80&w=870&auto=format&fit=crop&ixlib=rb-4.0.3&ixid=M3wxMjA3fDB8MHxwaG90by1wYWdlfHx8fGVufDB8fHx8fA%3D%3D' );
     background-size: cover;
     height: 400px;
   }
@@ -89,4 +88,9 @@ body.magazine_temp {
   display: flex;
   align-items: center;
   min-height: calc(100% - 0rem);
+ }
+
+ #work-image{
+  background-color: rgb(123, 161, 183);
+  min-height: 100px;
  }

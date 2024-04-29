@@ -7,7 +7,7 @@ from sqlalchemy import Integer, String, Float, Boolean, Text
 from werkzeug.security import generate_password_hash, check_password_hash
 from werkzeug.utils import secure_filename
 from flask_login import UserMixin, login_user, LoginManager, login_required, current_user, logout_user
-from forms import SignupForm, EditAccountForm, EditCardForm, PaymentForm, LogInForm, EditCardForm, VCard, EditPasswordForm
+from forms import SignupForm, EditAccountForm, EditCardForm, PaymentForm, LogInForm, EditCardForm, VCard, EditImagesForm
 from flask_ckeditor import CKEditor
 from PIL import Image
 import qrcode
@@ -46,11 +46,12 @@ class User(db.Model, UserMixin):
     url_path: Mapped[str] = mapped_column(String(250), primary_key=True)
     email: Mapped[str] = mapped_column(String(250), unique=True, nullable=False)
     password: Mapped[str] = mapped_column(String(250), nullable=False)
-    #TODO: theme: Mapped[str] = mapped_column(String(250), nullable=True)
-    # colors: Mapped[str] = mapped_column(String(250), nullable=True)    
+    theme: Mapped[str] = mapped_column(String(250), nullable=True)
+    colors: Mapped[str] = mapped_column(String(250), nullable=True)    
     name: Mapped[str] = mapped_column(String(250), nullable=False)
     job_title: Mapped[str] = mapped_column(String(250), nullable=True)
     provided_profile_pic: Mapped[str] = mapped_column(String(250), nullable=True)
+    #TODO: remove s3_profile_pic
     s3_profile_pic: Mapped[str] = mapped_column(String(250), nullable=True)
     headline_description: Mapped[str] = mapped_column(Text, nullable=True)
     displayed_email: Mapped[str] = mapped_column(String(250), nullable=True)
@@ -69,11 +70,11 @@ class User(db.Model, UserMixin):
     website_link: Mapped[str] = mapped_column(String(250), nullable=True)
     venmo: Mapped[str] = mapped_column(String(250), nullable=True)
     stripe: Mapped[str] = mapped_column(String(250), nullable=True)
-    #TODO: work1: Mapped[str] = mapped_column(String(250), nullable=True)
-    # work2: Mapped[str] = mapped_column(String(250), nullable=True)
-    # work3: Mapped[str] = mapped_column(String(250), nullable=True)
-    # work4: Mapped[str] = mapped_column(String(250), nullable=True)
-    # work5: Mapped[str] = mapped_column(String(250), nullable=True)    
+    work1: Mapped[str] = mapped_column(String(250), nullable=True)
+    work2: Mapped[str] = mapped_column(String(250), nullable=True)
+    work3: Mapped[str] = mapped_column(String(250), nullable=True)
+    work4: Mapped[str] = mapped_column(String(250), nullable=True)
+    work5: Mapped[str] = mapped_column(String(250), nullable=True)    
     body: Mapped[str] = mapped_column(Text, nullable=True)    
     payment: Mapped[bool] = mapped_column(Boolean, nullable=True)
 
@@ -97,7 +98,7 @@ def load_user(user_id):
     return db.get_or_404(User, user_id)
 
 
-# AWS S3 Bucket Initialization and Connection
+# AWS S3 Bucket Initialization and Connection and save
 aws_access_key_id = os.environ.get("AWS_ACCESS_KEY")
 aws_secret_access_key = os.environ.get("AWS_SECRET_ACCESS_KEY")
 BUCKET_NAME = "digibusiness-card-bucket"
@@ -109,6 +110,19 @@ s3 = boto3.client('s3',
     region_name='us-east-2',
     endpoint_url='https://s3.us-east-2.amazonaws.com',
 )
+
+def save_to_s3(image, url_path, s3_name):
+    img = Image.open(image)
+    width, height= img.size
+    if width>600:
+        img.thumbnail((600,1080))
+    buffer=io.BytesIO()
+    img.save(buffer, format="JPEG")
+    buffer.seek(0)
+    s3.put_object(
+        Bucket=BUCKET_NAME,
+        Key=f"{url_path}_{s3_name}",
+        Body=buffer)  
 
 
 #GENERATE VCF FILE TO SAVE CONTACTS
@@ -152,12 +166,21 @@ def register():
                 url_path = request.form["url_path"].lower(),
                 name = request.form["name"],
                 job_title = request.form["job_title"],
+                provided_profile_pic = signup_form.picture.data.filename,
                 payment=False,
-                # theme="minimalist",
-                # colors="light",
+                theme="magazine",
+                colors="light",
             )
             db.session.add(new_user)
             db.session.commit()
+            
+            # UPLOAD PROFILE PIC TO S3
+            profile_pic = signup_form.picture.data
+            s3_profile_pic = secure_filename(signup_form.picture.data.filename)
+            url_path = request.form["url_path"].lower()
+            save_to_s3(profile_pic, url_path, s3_profile_pic)     
+            
+            # SET SESSION USER EMAIL
             session['user_email']=request.form["email"]
             return redirect(url_for('payment'))
     return render_template("register.html", signup_form=signup_form)
@@ -225,18 +248,34 @@ def card(url_path):
         qr_encoded = base64.b64encode(buffer.getvalue())
         
         # GRAB IMAGES FROM S3
-        #TODO: edit key path to dynamic user.s3_work_names
-        work1_url = s3.generate_presigned_url("get_object", Params={"Bucket": BUCKET_NAME, "Key": f"{url_path}_abstract.jpg"}, ExpiresIn=30)
-        work2_url = s3.generate_presigned_url("get_object", Params={"Bucket": BUCKET_NAME, "Key": f"{url_path}_chairs.jpg"}, ExpiresIn=30)
-        work3_url = s3.generate_presigned_url("get_object", Params={"Bucket": BUCKET_NAME, "Key": f"{url_path}_city.jpg"}, ExpiresIn=30)
-        work4_url = s3.generate_presigned_url("get_object", Params={"Bucket": BUCKET_NAME, "Key": f"{url_path}_forest_background.jpg"}, ExpiresIn=30)
-        work5_url = s3.generate_presigned_url("get_object", Params={"Bucket": BUCKET_NAME, "Key": f"{url_path}_mobile_background.jpeg"}, ExpiresIn=30)
+        # PROFILE PIC
+        if user.provided_profile_pic:
+            s3_profile_pic = secure_filename(user.provided_profile_pic)
+            profile_pic = s3.generate_presigned_url("get_object", Params={"Bucket": BUCKET_NAME, "Key": f"{url_path}_{s3_profile_pic}"}, ExpiresIn=30)
+        else:
+            profile_pic = None
+        
+        # WORKS
+        if user.work1:
+            s3_work1_name = secure_filename(user.work1)
+            work1_url = s3.generate_presigned_url("get_object", Params={"Bucket": BUCKET_NAME, "Key": f"{url_path}_{s3_work1_name}"}, ExpiresIn=30)
+        else:
+            work1_url = None
+
+        if user.work2:
+            s3_work2_name = secure_filename(user.work2)
+            work2_url = s3.generate_presigned_url("get_object", Params={"Bucket": BUCKET_NAME, "Key": f"{url_path}_{s3_work2_name}"}, ExpiresIn=30)
+        else:
+            work2_url = None
+        #TODO: Add Work 3-5    
+          
+            
 
         # PASS CAN_EDIT FLAG TO SHOW MENU IF USER IS AUTHENTICATED
         if current_user.is_authenticated and current_user.url_path == user.url_path:
             can_edit=True
-            return render_template("bus_card.html", user=user, can_edit=can_edit, qr_img=qr_encoded.decode('utf-8'), work1_url=work1_url, work2_url=work2_url, work3_url=work3_url, work4_url=work4_url, work5_url=work5_url)
-        return render_template("bus_card.html", user=user, qr_img=qr_encoded.decode('utf-8'), work1_url=work1_url, work2_url=work2_url, work3_url=work3_url, work4_url=work4_url, work5_url=work5_url)
+            return render_template("bus_card.html", user=user, can_edit=can_edit, qr_img=qr_encoded.decode('utf-8'), profile_pic=profile_pic, work1_url=work1_url, work2_url=work2_url)
+        return render_template("bus_card.html", user=user, qr_img=qr_encoded.decode('utf-8'), profile_pic=profile_pic, work1_url=work1_url, work2_url=work2_url)
     else:
         return "Sorry, user doesn't exist"
 
@@ -265,8 +304,6 @@ def edit_account(url_path):
     edit_account_form = EditAccountForm()
     if current_user.is_authenticated and current_user.url_path == user.url_path:
         if request.method=="POST":
-            test = request.form.get("email")
-            print(test)
             current_user.email = request.form.get("email")
             current_user.url_path = request.form.get("url_path")
             db.session.commit()
@@ -283,20 +320,18 @@ def edit_card(url_path):
     result = db.session.execute(db.select(User).where(User.url_path==url_path))
     user = result.scalar()
     edit_card_form = EditCardForm() 
-    # Show existing data
+    # SHOW EXISTING DATA
     if current_user.is_authenticated and current_user.url_path == user.url_path:
-        # edit_card_form.theme.data = current_user.theme
-        # edit_card_form.colors.data = current_user.colors
+        edit_card_form.theme.data = current_user.theme
+        edit_card_form.colors.data = current_user.colors
         edit_card_form.name.data = current_user.name
         edit_card_form.job_title.data = current_user.job_title
-        edit_card_form.profile_picture.data = current_user.provided_profile_pic
         edit_card_form.headline_description.data = current_user.headline_description
         if not current_user.displayed_email:
             edit_card_form.displayed_email.data = current_user.email
         else:
             edit_card_form.displayed_email.data =current_user.displayed_email
         edit_card_form.phone.data = current_user.phone
-        edit_card_form.logo.data = current_user.logo
         edit_card_form.company.data = current_user.company
         edit_card_form.location.data = current_user.location
         edit_card_form.social_plat1.data = current_user.social_plat1
@@ -310,59 +345,18 @@ def edit_card(url_path):
         edit_card_form.website_link.data = current_user.website_link
         edit_card_form.venmo.data = current_user.venmo
         edit_card_form.stripe.data = current_user.stripe
-        # TODO: edit_card_form.work1.data = current_user.work1       
-        edit_card_form.body.data = current_user.body
+        edit_card_form.body.data = current_user.body   
         
-        if request.method=="POST" and edit_card_form.validate_on_submit():
-            work1 = edit_card_form.work1.data
-            work2 = edit_card_form.work2.data
-            work3 = edit_card_form.work3.data
-            work4 = edit_card_form.work4.data
-            work5 = edit_card_form.work5.data
-            # TODO: Save these to database
-            work1_name=work1.filename
-            work2_name=work2.filename
-            work3_name=work3.filename
-            work4_name=work4.filename
-            work5_name=work5.filename
-            #TODO: save these as AWS S3 filenames
-            s3_work1_name = secure_filename(work1_name)
-            s3_work2_name = secure_filename(work2_name)
-            s3_work3_name = secure_filename(work3_name)
-            s3_work4_name = secure_filename(work4_name)
-            s3_work5_name = secure_filename(work5_name)
-
-            work_dictionary ={
-                s3_work1_name: work1,
-                s3_work2_name: work2,
-                s3_work3_name: work3,
-                s3_work4_name: work4,
-                s3_work5_name: work5,
-            }
-            
-            for s3_work_name, work in work_dictionary.items():
-                img = Image.open(work)
-                width, height= img.size
-                if width>600:
-                    img.thumbnail((600,1080))
-                buffer=io.BytesIO()
-                img.save(buffer, format="JPEG")
-                buffer.seek(0)
-                s3.put_object(
-                    Bucket=BUCKET_NAME,
-                    Key=f"{url_path}_{s3_work_name}",
-                    Body=buffer)
-                        
-            
-            # current_user.theme = edit_card_form.theme.data
-            # current_user.colors = edit_card_form.colors.data
+        
+        # POPULATE WITH NEW DATA
+        if request.method=="POST":   
+            current_user.theme = edit_card_form.theme.data
+            current_user.colors = edit_card_form.colors.data
             current_user.name = request.form.get('name')
             current_user.job_title = request.form.get('job_title')
-            current_user.provided_profile_pic = request.form.get('provided_profile_pic')
             current_user.headline_description = request.form.get('headline_description')
             current_user.displayed_email = request.form.get('displayed_email')
             current_user.phone = request.form.get('phone')
-            current_user.logo = request.form.get('logo')
             current_user.company = request.form.get('company')
             current_user.location = request.form.get('location')
             current_user.social_plat1 = request.form.get('social_plat1')
@@ -376,13 +370,47 @@ def edit_card(url_path):
             current_user.website_link = request.form.get('website_link')
             current_user.venmo = request.form.get('venmo')
             current_user.stripe = request.form.get('stripe')
-            # TODO: current_user.work1 = work1_name 
-            # TODO: current_user.s3_work1 = s3_work1_name
             current_user.body = request.form.get('body')
             db.session.commit()
             return redirect(url_for('card', url_path=current_user.url_path))   
         return render_template("edit_card.html", user=current_user, edit_card_form=edit_card_form)
 
+@app.route('/card/edit-images/<url_path>', methods=["GET","POST"])
+@login_required
+def edit_images(url_path):
+    result = db.session.execute(db.select(User).where(User.url_path==url_path))
+    user = result.scalar()
+    # SHOW EXISTING DATA
+    if current_user.is_authenticated and current_user.url_path == user.url_path:
+        # SHOW EXISTING PROFILE PIC AND WORKS
+        if current_user.provided_profile_pic:
+            s3_profile_pic = secure_filename(current_user.provided_profile_pic)
+            profile_pic_url = s3.generate_presigned_url("get_object", Params={"Bucket": BUCKET_NAME, "Key": f"{url_path}_{s3_profile_pic}"}, ExpiresIn=30)            
+        
+        if current_user.work1:
+            s3_work1 = secure_filename(current_user.work1)
+            work1_url = s3.generate_presigned_url("get_object", Params={"Bucket": BUCKET_NAME, "Key": f"{url_path}_{s3_work1}"}, ExpiresIn=30)    
+
+        # UPDATE IMAGE TO S3 AND CHANGE DATABASE FILE NAMES
+        if request.method=="POST":
+            
+            #PROFILE PICTURE
+            if request.files["profile"]:
+                profile_pic = request.files["profile"]
+                s3_profile_pic = secure_filename(profile_pic.filename)
+                save_to_s3(profile_pic, url_path, s3_profile_pic)     
+                current_user.provided_profile_pic = profile_pic.filename
+                db.session.commit()
+                
+            if request.files["work1"]:
+                work1 = request.files["work1"]
+                s3_work1 = secure_filename(work1.filename)
+                save_to_s3(work1, url_path, s3_work1)     
+                current_user.work1 = work1.filename
+                db.session.commit()
+  
+            return redirect(url_for('card', url_path=current_user.url_path))  
+    return render_template("edit_images.html", user=current_user,  profile_pic_url=profile_pic_url, work1_url=work1_url)  
 
 if __name__ == "__main__":
     app.run(debug=True)
