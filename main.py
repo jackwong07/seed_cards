@@ -267,15 +267,32 @@ def card(url_path):
             work2_url = s3.generate_presigned_url("get_object", Params={"Bucket": BUCKET_NAME, "Key": f"{url_path}_{s3_work2_name}"}, ExpiresIn=30)
         else:
             work2_url = None
-        #TODO: Add Work 3-5    
-          
+        #TODO: Add Work 3-5
+        
+        if user.work3:
+            s3_work3_name = secure_filename(user.work3)
+            work3_url = s3.generate_presigned_url("get_object", Params={"Bucket": BUCKET_NAME, "Key": f"{url_path}_{s3_work3_name}"}, ExpiresIn=30)
+        else:
+            work3_url = None  
+            
+        if user.work4:
+            s3_work4_name = secure_filename(user.work4)
+            work4_url = s3.generate_presigned_url("get_object", Params={"Bucket": BUCKET_NAME, "Key": f"{url_path}_{s3_work4_name}"}, ExpiresIn=30)
+        else:
+            work4_url = None  
+        
+        if user.work5:
+            s3_work5_name = secure_filename(user.work5)
+            work5_url = s3.generate_presigned_url("get_object", Params={"Bucket": BUCKET_NAME, "Key": f"{url_path}_{s3_work5_name}"}, ExpiresIn=30)
+        else:
+            work5_url = None  
             
 
         # PASS CAN_EDIT FLAG TO SHOW MENU IF USER IS AUTHENTICATED
         if current_user.is_authenticated and current_user.url_path == user.url_path:
             can_edit=True
-            return render_template("bus_card.html", user=user, can_edit=can_edit, qr_img=qr_encoded.decode('utf-8'), profile_pic=profile_pic, work1_url=work1_url, work2_url=work2_url)
-        return render_template("bus_card.html", user=user, qr_img=qr_encoded.decode('utf-8'), profile_pic=profile_pic, work1_url=work1_url, work2_url=work2_url)
+            return render_template("bus_card.html", user=user, can_edit=can_edit, qr_img=qr_encoded.decode('utf-8'), profile_pic=profile_pic, work1_url=work1_url, work2_url=work2_url, work3_url=work3_url, work4_url=work4_url, work5_url=work5_url)
+        return render_template("bus_card.html", user=user, qr_img=qr_encoded.decode('utf-8'), profile_pic=profile_pic, work1_url=work1_url, work2_url=work2_url, work3_url=work3_url, work4_url=work4_url, work5_url=work5_url)
     else:
         return "Sorry, user doesn't exist"
 
@@ -406,6 +423,18 @@ def edit_images(url_path):
             work3_url = s3.generate_presigned_url("get_object", Params={"Bucket": BUCKET_NAME, "Key": f"{url_path}_{s3_work3}"}, ExpiresIn=30)    
         else:
             work3_url=None
+            
+        if current_user.work4:
+            s3_work4 = secure_filename(current_user.work4)
+            work4_url = s3.generate_presigned_url("get_object", Params={"Bucket": BUCKET_NAME, "Key": f"{url_path}_{s3_work4}"}, ExpiresIn=30)    
+        else:
+            work4_url=None
+            
+        if current_user.work5:
+            s3_work5 = secure_filename(current_user.work5)
+            work5_url = s3.generate_presigned_url("get_object", Params={"Bucket": BUCKET_NAME, "Key": f"{url_path}_{s3_work5}"}, ExpiresIn=30)    
+        else:
+            work5_url=None
 
         # UPDATE IMAGE TO S3 AND CHANGE DATABASE FILE NAMES
         if request.method=="POST":
@@ -416,31 +445,42 @@ def edit_images(url_path):
                 s3_profile_pic = secure_filename(profile_pic.filename)
                 save_to_s3(profile_pic, url_path, s3_profile_pic)     
                 current_user.provided_profile_pic = profile_pic.filename
-                db.session.commit()
-                
+            
+            #WORKS
             if request.files["work1"]:
                 work1 = request.files["work1"]
                 s3_work1 = secure_filename(work1.filename)
                 save_to_s3(work1, url_path, s3_work1)     
                 current_user.work1 = work1.filename
-                db.session.commit()
   
             if request.files["work2"]:
                 work2 = request.files["work2"]
                 s3_work2 = secure_filename(work2.filename)
                 save_to_s3(work2, url_path, s3_work2)     
                 current_user.work2 = work2.filename
-                db.session.commit()
                 
             if request.files["work3"]:
                 work3 = request.files["work3"]
                 s3_work3 = secure_filename(work3.filename)
                 save_to_s3(work3, url_path, s3_work3)     
                 current_user.work3 = work3.filename
-                db.session.commit()
-  
+ 
+            if request.files["work4"]:
+                work4 = request.files["work4"]
+                s3_work4 = secure_filename(work4.filename)
+                save_to_s3(work4, url_path, s3_work4)     
+                current_user.work4 = work4.filename
+
+
+            if request.files["work5"]:
+                work5 = request.files["work5"]
+                s3_work5 = secure_filename(work5.filename)
+                save_to_s3(work5, url_path, s3_work5)     
+                current_user.work5 = work5.filename
+            
+            db.session.commit()
             return redirect(url_for('card', url_path=current_user.url_path))  
-    return render_template("edit_images.html", user=current_user,  profile_pic_url=profile_pic_url, work1_url=work1_url, work2_url=work2_url,  work3_url=work3_url)  
+    return render_template("edit_images.html", user=current_user,  profile_pic_url=profile_pic_url, work1_url=work1_url, work2_url=work2_url,  work3_url=work3_url,  work4_url=work4_url, work5_url=work5_url)  
 
 if __name__ == "__main__":
     app.run(debug=True)

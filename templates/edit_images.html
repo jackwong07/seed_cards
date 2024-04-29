@@ -73,6 +73,34 @@
         </div>
       </div>
 
+      <div>
+        {% if user.work4 %}
+          <div class="card" style="width: 12rem;">
+          <img src="{{work4_url}}" class="card-img-top" alt="{{user.work4}}">
+          <div class="card-body">
+          <p class="card-text">{{user.work4}}</p>
+          </div>
+          </div>
+        {%endif%}
+        <div class="form-group"><label class="form-control-label" for="work4">Update Work 4</label>
+          <input class="form-control-file" id="work4" name="work4" type="file" value={{current_user.work4}}>
+        </div>
+      </div>
+
+      <div>
+        {% if user.work5 %}
+          <div class="card" style="width: 12rem;">
+          <img src="{{work5_url}}" class="card-img-top" alt="{{user.work5}}">
+          <div class="card-body">
+          <p class="card-text">{{user.work5}}</p>
+          </div>
+          </div>
+        {%endif%}
+        <div class="form-group"><label class="form-control-label" for="work5">Update Work 5</label>
+          <input class="form-control-file" id="work5" name="work5" type="file" value={{current_user.work5}}>
+        </div>
+      </div>
+
         <div class="form-group">
           <input class="btn btn-primary btn-md" id="submit" name="submit" type="submit" value="Update">
         </div>
