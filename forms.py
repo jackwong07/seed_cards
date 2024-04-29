@@ -72,11 +72,15 @@ class EditCardForm(FlaskForm):
 
 class EditAccountForm(FlaskForm):
     email = StringField(label='Account Email to log in', validators=[validate_email])
-    password = PasswordField(label='New Password', validators=[DataRequired(), EqualTo('confirm', message='Passwords must match')])
-    confirm  = PasswordField('Repeat New Password')
     url_path = StringField(label="Unique URL path", validators=[DataRequired()])
+    password = PasswordField(label='Password', validators=[DataRequired(), EqualTo('confirm', message='Passwords must match')])
+    confirm  = PasswordField('Repeat Password')
     submit = SubmitField(label="Update")
-    
+
+class EditPasswordForm(FlaskForm):
+    confirm  = PasswordField('Repeat New Password')
+    submit = SubmitField(label="Update")
+
 
 # SEND CONTACT INFO as VCF
 class VCard():

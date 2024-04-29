@@ -7,7 +7,7 @@ from sqlalchemy import Integer, String, Float, Boolean, Text
 from werkzeug.security import generate_password_hash, check_password_hash
 from werkzeug.utils import secure_filename
 from flask_login import UserMixin, login_user, LoginManager, login_required, current_user, logout_user
-from forms import SignupForm, EditAccountForm, EditCardForm, PaymentForm, LogInForm, EditCardForm, VCard
+from forms import SignupForm, EditAccountForm, EditCardForm, PaymentForm, LogInForm, EditCardForm, VCard, EditPasswordForm
 from flask_ckeditor import CKEditor
 from PIL import Image
 import qrcode
@@ -153,8 +153,8 @@ def register():
                 name = request.form["name"],
                 job_title = request.form["job_title"],
                 payment=False,
-                theme="minimalist",
-                colors="light",
+                # theme="minimalist",
+                # colors="light",
             )
             db.session.add(new_user)
             db.session.commit()
@@ -255,28 +255,34 @@ def generate_vcf(url_path):
         ) 
     return send_file(get_vcard(user_vcard), mimetype='text/vcard')
 
+
 # EDIT ROUTES - USER MUST BE LOGGED IN
 @app.route('/card/edit-account/<url_path>', methods=["GET","POST"])
 @login_required
 def edit_account(url_path):
-    edit_account_form = EditAccountForm()
     result = db.session.execute(db.select(User).where(User.url_path==url_path))
     user = result.scalar()
+    edit_account_form = EditAccountForm()
     if current_user.is_authenticated and current_user.url_path == user.url_path:
-        edit_account_form.email.data = current_user.email
-        # TODO: update password
-        # edit_account_form.password.data = check_password_hash(current_user.password)
-        edit_account_form.url_path.data = current_user.url_path
+        if request.method=="POST":
+            test = request.form.get("email")
+            print(test)
+            current_user.email = request.form.get("email")
+            current_user.url_path = request.form.get("url_path")
+            db.session.commit()
+            if edit_account_form.password.data != "":
+                current_user.password = generate_password_hash(request.form.get("password"), method='pbkdf2:sha256', salt_length=8)
+                db.session.commit()
+            return redirect(url_for('card', url_path=current_user.url_path))   
         return render_template("edit_account.html", user=current_user, edit_account_form=edit_account_form)
 
 
 @app.route('/card/edit-card/<url_path>', methods=["GET","POST"])
 @login_required
 def edit_card(url_path):
-    edit_card_form = EditCardForm()
     result = db.session.execute(db.select(User).where(User.url_path==url_path))
     user = result.scalar()
-    
+    edit_card_form = EditCardForm() 
     # Show existing data
     if current_user.is_authenticated and current_user.url_path == user.url_path:
         # edit_card_form.theme.data = current_user.theme
@@ -285,10 +291,10 @@ def edit_card(url_path):
         edit_card_form.job_title.data = current_user.job_title
         edit_card_form.profile_picture.data = current_user.provided_profile_pic
         edit_card_form.headline_description.data = current_user.headline_description
-        if not user.displayed_email:
+        if not current_user.displayed_email:
             edit_card_form.displayed_email.data = current_user.email
         else:
-            edit_card_form.displayed_email.data =user.displayed_email
+            edit_card_form.displayed_email.data =current_user.displayed_email
         edit_card_form.phone.data = current_user.phone
         edit_card_form.logo.data = current_user.logo
         edit_card_form.company.data = current_user.company
@@ -307,7 +313,7 @@ def edit_card(url_path):
         # TODO: edit_card_form.work1.data = current_user.work1       
         edit_card_form.body.data = current_user.body
         
-        if request.method=="POST":
+        if request.method=="POST" and edit_card_form.validate_on_submit():
             work1 = edit_card_form.work1.data
             work2 = edit_card_form.work2.data
             work3 = edit_card_form.work3.data
@@ -354,7 +360,7 @@ def edit_card(url_path):
             current_user.job_title = request.form.get('job_title')
             current_user.provided_profile_pic = request.form.get('provided_profile_pic')
             current_user.headline_description = request.form.get('headline_description')
-            user.displayed_email = request.form.get('displayed_email')
+            current_user.displayed_email = request.form.get('displayed_email')
             current_user.phone = request.form.get('phone')
             current_user.logo = request.form.get('logo')
             current_user.company = request.form.get('company')
