@@ -1,6 +1,14 @@
 {% include "header.html" %}
 
 
+{% with messages = get_flashed_messages() %}
+{% if messages %}
+  {% for message in messages %}
+  <p style="color: red">{{ message }}</p>
+  {% endfor %}
+{% endif %}
+{% endwith %}
+
     <!-- Title -->
     <div class="container col-xxl-8 px-4 py-2">
         <div class="row flex-lg-row-reverse align-items-center g-5 py-5">

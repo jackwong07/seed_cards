@@ -14,11 +14,11 @@
             <h1 class="h3 mb-3 fw-normal">Update Images</h1>
         
             <div>
-        {% if user.provided_profile_pic %}
+        {% if user.profile_pic %}
           <div class="card" style="width: 12rem;">
-          <img src="{{profile_pic_url}}" class="card-img-top" alt="{{user.provided_profile_pic}}">
+          <img src="{{profile_pic_url}}" class="card-img-top" alt="{{user.profile_pic}}">
           <div class="card-body">
-          <p class="card-text">{{user.provided_profile_pic}}</p>
+          <p class="card-text">{{user.profile_pic}}</p>
           </div>
           </div>
         {%endif%}

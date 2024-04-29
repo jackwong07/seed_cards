@@ -50,9 +50,7 @@ class User(db.Model, UserMixin):
     colors: Mapped[str] = mapped_column(String(250), nullable=True)    
     name: Mapped[str] = mapped_column(String(250), nullable=False)
     job_title: Mapped[str] = mapped_column(String(250), nullable=True)
-    provided_profile_pic: Mapped[str] = mapped_column(String(250), nullable=True)
-    #TODO: remove s3_profile_pic
-    s3_profile_pic: Mapped[str] = mapped_column(String(250), nullable=True)
+    profile_pic: Mapped[str] = mapped_column(String(250), nullable=True)
     headline_description: Mapped[str] = mapped_column(Text, nullable=True)
     displayed_email: Mapped[str] = mapped_column(String(250), nullable=True)
     phone: Mapped[str] = mapped_column(String(250), nullable=True)
@@ -145,6 +143,7 @@ def get_vcard(vcard: VCard) -> io.BytesIO:
 # CREATE ROUTES AND RENDER HTML TEMPLATES
 @app.route('/')
 def home():
+    session.pop('_flashes', None)
     return render_template("index.html")
 
 
@@ -166,7 +165,7 @@ def register():
                 url_path = request.form["url_path"].lower(),
                 name = request.form["name"],
                 job_title = request.form["job_title"],
-                provided_profile_pic = signup_form.picture.data.filename,
+                profile_pic = secure_filename(signup_form.picture.data.filename),
                 payment=False,
                 theme="magazine",
                 colors="light",
@@ -250,40 +249,34 @@ def card(url_path):
         
         # GRAB IMAGES FROM S3
         # PROFILE PIC
-        if user.provided_profile_pic:
-            s3_profile_pic = secure_filename(user.provided_profile_pic)
-            profile_pic = s3.generate_presigned_url("get_object", Params={"Bucket": BUCKET_NAME, "Key": f"{url_path}_{s3_profile_pic}"}, ExpiresIn=30)
+        if user.profile_pic:
+            profile_pic = s3.generate_presigned_url("get_object", Params={"Bucket": BUCKET_NAME, "Key": f"{url_path}_{user.profile_pic}"}, ExpiresIn=30)
         else:
             profile_pic = None
         
         # WORKS
         if user.work1:
-            s3_work1_name = secure_filename(user.work1)
-            work1_url = s3.generate_presigned_url("get_object", Params={"Bucket": BUCKET_NAME, "Key": f"{url_path}_{s3_work1_name}"}, ExpiresIn=30)
+            work1_url = s3.generate_presigned_url("get_object", Params={"Bucket": BUCKET_NAME, "Key": f"{url_path}_{user.work1}"}, ExpiresIn=30)
         else:
             work1_url = None
 
         if user.work2:
-            s3_work2_name = secure_filename(user.work2)
-            work2_url = s3.generate_presigned_url("get_object", Params={"Bucket": BUCKET_NAME, "Key": f"{url_path}_{s3_work2_name}"}, ExpiresIn=30)
+            work2_url = s3.generate_presigned_url("get_object", Params={"Bucket": BUCKET_NAME, "Key": f"{url_path}_{user.work2}"}, ExpiresIn=30)
         else:
             work2_url = None
         
         if user.work3:
-            s3_work3_name = secure_filename(user.work3)
-            work3_url = s3.generate_presigned_url("get_object", Params={"Bucket": BUCKET_NAME, "Key": f"{url_path}_{s3_work3_name}"}, ExpiresIn=30)
+            work3_url = s3.generate_presigned_url("get_object", Params={"Bucket": BUCKET_NAME, "Key": f"{url_path}_{user.work3}"}, ExpiresIn=30)
         else:
             work3_url = None  
             
         if user.work4:
-            s3_work4_name = secure_filename(user.work4)
-            work4_url = s3.generate_presigned_url("get_object", Params={"Bucket": BUCKET_NAME, "Key": f"{url_path}_{s3_work4_name}"}, ExpiresIn=30)
+            work4_url = s3.generate_presigned_url("get_object", Params={"Bucket": BUCKET_NAME, "Key": f"{url_path}_{user.work4}"}, ExpiresIn=30)
         else:
             work4_url = None  
         
         if user.work5:
-            s3_work5_name = secure_filename(user.work5)
-            work5_url = s3.generate_presigned_url("get_object", Params={"Bucket": BUCKET_NAME, "Key": f"{url_path}_{s3_work5_name}"}, ExpiresIn=30)
+            work5_url = s3.generate_presigned_url("get_object", Params={"Bucket": BUCKET_NAME, "Key": f"{url_path}_{user.work5}"}, ExpiresIn=30)
         else:
             work5_url = None  
             
@@ -317,17 +310,40 @@ def generate_vcf(url_path):
 def edit_account(url_path):
     result = db.session.execute(db.select(User).where(User.url_path==url_path))
     user = result.scalar()
-    edit_account_form = EditAccountForm()
     if current_user.is_authenticated and current_user.url_path == user.url_path:
         if request.method=="POST":
             current_user.email = request.form.get("email")
             current_user.url_path = request.form.get("url_path")
             db.session.commit()
-            if edit_account_form.password.data != "":
+            if request.form.get("password") != "":
                 current_user.password = generate_password_hash(request.form.get("password"), method='pbkdf2:sha256', salt_length=8)
                 db.session.commit()
             return redirect(url_for('card', url_path=current_user.url_path))   
-        return render_template("edit_account.html", user=current_user, edit_account_form=edit_account_form)
+        return render_template("edit_account.html", user=current_user)
+
+
+@app.route('/card/cancel-account/<url_path>', methods=["GET","POST"])
+@login_required
+def cancel_account(url_path):
+    result = db.session.execute(db.select(User).where(User.url_path==url_path))
+    user = result.scalar()
+    
+    # TODO DELETE S3 FILES
+    if user.profile_pic:
+        my_object = s3.Object(Bucket=BUCKET_NAME, Key=f"{url_path}_{user.profile_pic}")
+        response = my_object.delete()
+    
+    if user.work1:
+        s3.delete_object(Bucket=BUCKET_NAME, Key=f"{url_path}_{user.work1}")
+    #s3.generate_presigned_url("get_object", Params={"Bucket": BUCKET_NAME, "Key": f"{url_path}_{s3_work3_name}"}, ExpiresIn=30)
+
+
+    # TODO DELETE USER FROM DATABASE, without getting 404 error after    
+    db.session.delete(user)
+    db.session.commit()
+
+    flash("Account successfully deleted. Thank you for your support.")
+    return redirect(url_for('home'))
 
 
 @app.route('/card/edit-card/<url_path>', methods=["GET","POST"])
@@ -399,39 +415,33 @@ def edit_images(url_path):
     # SHOW EXISTING DATA
     if current_user.is_authenticated and current_user.url_path == user.url_path:
         # SHOW EXISTING PROFILE PIC AND WORKS
-        if current_user.provided_profile_pic:
-            s3_profile_pic = secure_filename(current_user.provided_profile_pic)
-            profile_pic_url = s3.generate_presigned_url("get_object", Params={"Bucket": BUCKET_NAME, "Key": f"{url_path}_{s3_profile_pic}"}, ExpiresIn=30)            
+        if current_user.profile_pic:
+            profile_pic_url = s3.generate_presigned_url("get_object", Params={"Bucket": BUCKET_NAME, "Key": f"{url_path}_{current_user.profile_pic}"}, ExpiresIn=30)            
         else:
             profile_pic_url=None
                     
         if current_user.work1:
-            s3_work1 = secure_filename(current_user.work1)
-            work1_url = s3.generate_presigned_url("get_object", Params={"Bucket": BUCKET_NAME, "Key": f"{url_path}_{s3_work1}"}, ExpiresIn=30)    
+            work1_url = s3.generate_presigned_url("get_object", Params={"Bucket": BUCKET_NAME, "Key": f"{url_path}_{current_user.work1}"}, ExpiresIn=30)    
         else:
             work1_url=None
             
         if current_user.work2:
-            s3_work2 = secure_filename(current_user.work2)
-            work2_url = s3.generate_presigned_url("get_object", Params={"Bucket": BUCKET_NAME, "Key": f"{url_path}_{s3_work2}"}, ExpiresIn=30)    
+            work2_url = s3.generate_presigned_url("get_object", Params={"Bucket": BUCKET_NAME, "Key": f"{url_path}_{current_user.work2}"}, ExpiresIn=30)    
         else:
             work2_url=None
 
         if current_user.work3:
-            s3_work3 = secure_filename(current_user.work3)
-            work3_url = s3.generate_presigned_url("get_object", Params={"Bucket": BUCKET_NAME, "Key": f"{url_path}_{s3_work3}"}, ExpiresIn=30)    
+            work3_url = s3.generate_presigned_url("get_object", Params={"Bucket": BUCKET_NAME, "Key": f"{url_path}_{current_user.work3}"}, ExpiresIn=30)    
         else:
             work3_url=None
             
         if current_user.work4:
-            s3_work4 = secure_filename(current_user.work4)
-            work4_url = s3.generate_presigned_url("get_object", Params={"Bucket": BUCKET_NAME, "Key": f"{url_path}_{s3_work4}"}, ExpiresIn=30)    
+            work4_url = s3.generate_presigned_url("get_object", Params={"Bucket": BUCKET_NAME, "Key": f"{url_path}_{current_user.work4}"}, ExpiresIn=30)    
         else:
             work4_url=None
             
         if current_user.work5:
-            s3_work5 = secure_filename(current_user.work5)
-            work5_url = s3.generate_presigned_url("get_object", Params={"Bucket": BUCKET_NAME, "Key": f"{url_path}_{s3_work5}"}, ExpiresIn=30)    
+            work5_url = s3.generate_presigned_url("get_object", Params={"Bucket": BUCKET_NAME, "Key": f"{url_path}_{current_user.work5}"}, ExpiresIn=30)    
         else:
             work5_url=None
 
@@ -443,39 +453,39 @@ def edit_images(url_path):
                 profile_pic = request.files["profile"]
                 s3_profile_pic = secure_filename(profile_pic.filename)
                 save_to_s3(profile_pic, url_path, s3_profile_pic)     
-                current_user.provided_profile_pic = profile_pic.filename
+                current_user.profile_pic = secure_filename(profile_pic.filename)
             
             #WORKS
             if request.files["work1"]:
                 work1 = request.files["work1"]
                 s3_work1 = secure_filename(work1.filename)
                 save_to_s3(work1, url_path, s3_work1)     
-                current_user.work1 = work1.filename
+                current_user.work1 = secure_filename(work1.filename)
   
             if request.files["work2"]:
                 work2 = request.files["work2"]
                 s3_work2 = secure_filename(work2.filename)
                 save_to_s3(work2, url_path, s3_work2)     
-                current_user.work2 = work2.filename
+                current_user.work2 = secure_filename(work2.filename)
                 
             if request.files["work3"]:
                 work3 = request.files["work3"]
                 s3_work3 = secure_filename(work3.filename)
                 save_to_s3(work3, url_path, s3_work3)     
-                current_user.work3 = work3.filename
+                current_user.work3 = secure_filename(work3.filename)
  
             if request.files["work4"]:
                 work4 = request.files["work4"]
                 s3_work4 = secure_filename(work4.filename)
                 save_to_s3(work4, url_path, s3_work4)     
-                current_user.work4 = work4.filename
+                current_user.work4 = secure_filename(work4.filename)
 
 
             if request.files["work5"]:
                 work5 = request.files["work5"]
                 s3_work5 = secure_filename(work5.filename)
                 save_to_s3(work5, url_path, s3_work5)     
-                current_user.work5 = work5.filename
+                current_user.work5 = secure_filename(work5.filename)
             
             db.session.commit()
             return redirect(url_for('card', url_path=current_user.url_path))  

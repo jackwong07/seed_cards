@@ -21,7 +21,7 @@
         </div>
 
         
-        <button type="button" id="show-pass-form-button" onclick="showPasswordForm('password_form'); return false;" class="btn btn-warning" style="width: 150px; margin-bottom:1em">Change Password</button>
+        <button type="button" id="show-pass-form-button" onclick="showPasswordForm('password_form'); return false;" class="btn btn-warning" style="width: 100%; margin-bottom:1em">Change Password</button>
         
         <div id="password_form" style="display: none;">
           <div class="form-group"><label class="form-control-label" for="password">Password</label>
@@ -36,11 +36,15 @@
         <div class="form-group">
         <input class="btn btn-primary btn-md" id="submit" name="submit" type="submit" value="Update">
       </div>
-      </form>
-      </main>
+
+
+      <hr/>
+      <br>
+      <a href="{{url_for('cancel_account', url_path=user.url_path)}}">Cancel Account</a>
+      
+    </form>
+  </main>
     </div> 
-
-
 
 
 
