@@ -386,10 +386,26 @@ def edit_images(url_path):
         if current_user.provided_profile_pic:
             s3_profile_pic = secure_filename(current_user.provided_profile_pic)
             profile_pic_url = s3.generate_presigned_url("get_object", Params={"Bucket": BUCKET_NAME, "Key": f"{url_path}_{s3_profile_pic}"}, ExpiresIn=30)            
-        
+        else:
+            profile_pic_url=None
+                    
         if current_user.work1:
             s3_work1 = secure_filename(current_user.work1)
             work1_url = s3.generate_presigned_url("get_object", Params={"Bucket": BUCKET_NAME, "Key": f"{url_path}_{s3_work1}"}, ExpiresIn=30)    
+        else:
+            work1_url=None
+            
+        if current_user.work2:
+            s3_work2 = secure_filename(current_user.work2)
+            work2_url = s3.generate_presigned_url("get_object", Params={"Bucket": BUCKET_NAME, "Key": f"{url_path}_{s3_work2}"}, ExpiresIn=30)    
+        else:
+            work2_url=None
+
+        if current_user.work3:
+            s3_work3 = secure_filename(current_user.work3)
+            work3_url = s3.generate_presigned_url("get_object", Params={"Bucket": BUCKET_NAME, "Key": f"{url_path}_{s3_work3}"}, ExpiresIn=30)    
+        else:
+            work3_url=None
 
         # UPDATE IMAGE TO S3 AND CHANGE DATABASE FILE NAMES
         if request.method=="POST":
@@ -409,8 +425,22 @@ def edit_images(url_path):
                 current_user.work1 = work1.filename
                 db.session.commit()
   
+            if request.files["work2"]:
+                work2 = request.files["work2"]
+                s3_work2 = secure_filename(work2.filename)
+                save_to_s3(work2, url_path, s3_work2)     
+                current_user.work2 = work2.filename
+                db.session.commit()
+                
+            if request.files["work3"]:
+                work3 = request.files["work3"]
+                s3_work3 = secure_filename(work3.filename)
+                save_to_s3(work3, url_path, s3_work3)     
+                current_user.work3 = work3.filename
+                db.session.commit()
+  
             return redirect(url_for('card', url_path=current_user.url_path))  
-    return render_template("edit_images.html", user=current_user,  profile_pic_url=profile_pic_url, work1_url=work1_url)  
+    return render_template("edit_images.html", user=current_user,  profile_pic_url=profile_pic_url, work1_url=work1_url, work2_url=work2_url,  work3_url=work3_url)  
 
 if __name__ == "__main__":
     app.run(debug=True)
