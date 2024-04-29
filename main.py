@@ -170,6 +170,7 @@ def register():
                 payment=False,
                 theme="magazine",
                 colors="light",
+                headline_description="Lorem ipsum dolor sit amet, consectetur adipiscing elit, sed do eiusmod tempor incididunt ut labore et dolore magna aliqua. Ut enim ad minim veniam, quis nostrud exercitation ullamco laboris nisi ut aliquip ex ea commodo consequat."
             )
             db.session.add(new_user)
             db.session.commit()
@@ -267,7 +268,6 @@ def card(url_path):
             work2_url = s3.generate_presigned_url("get_object", Params={"Bucket": BUCKET_NAME, "Key": f"{url_path}_{s3_work2_name}"}, ExpiresIn=30)
         else:
             work2_url = None
-        #TODO: Add Work 3-5
         
         if user.work3:
             s3_work3_name = secure_filename(user.work3)
@@ -287,7 +287,6 @@ def card(url_path):
         else:
             work5_url = None  
             
-
         # PASS CAN_EDIT FLAG TO SHOW MENU IF USER IS AUTHENTICATED
         if current_user.is_authenticated and current_user.url_path == user.url_path:
             can_edit=True

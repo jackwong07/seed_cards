@@ -47,13 +47,13 @@
 <br>
   <div class="row d-flex justify-content-left">
     <div class="text-left">
-      {% if user.company or user.location %}
+      {% if user.company %}
         <p style="font-size: 14pt">{{user.company}} |
         {% endif %}
-        {% if user.company or user.location %}
-        {{ user.location}}
+      {% if user.location %}
+        {{ user.location}}</p>
         {% endif %}
-      </p>
+      
 
         <p class="card-text text-start"><small>{{user.headline_description| safe}}</small></p>
       <a href="{{user.website_link}}" class="card-link" style="font-size: 14pt">{{user.website_link}}</a>
@@ -74,8 +74,10 @@
       </div>
     <br>
       <a href="mailto: {{user.displayed_email}}" class="card-link" style="font-size: 14pt">{{user.displayed_email}}</a>          
+      
+      {% if user.phone %}
       <p class="card-text text-start"style="font-size: 12pt">+1 {{user.phone}}</p>
-
+    {% endif %}
     </div>
   </div>
 <br/>
