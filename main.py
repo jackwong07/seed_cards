@@ -1,4 +1,4 @@
-from flask import Flask, render_template, redirect, url_for, request, session, send_file, flash
+from flask import Flask, jsonify, render_template, redirect, url_for, request, session, send_file, flash
 import os
 from flask_bootstrap import Bootstrap4
 from flask_sqlalchemy import SQLAlchemy
@@ -16,6 +16,8 @@ import base64
 import boto3
 from botocore.client import Config
 import stripe
+import json
+
 
 
 
@@ -118,8 +120,8 @@ def load_user(user_id):
 
 
 # AWS S3 Bucket Initialization and Connection and save
-aws_access_key_id = os.environ.get("AWS_ACCESS_KEY")
-aws_secret_access_key = os.environ.get("AWS_SECRET_ACCESS_KEY")
+aws_access_key_id = "AKIA6GBMF7OV5N6SKCW2"
+aws_secret_access_key = "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"
 BUCKET_NAME = "digibusiness-card-bucket"
 
 s3 = boto3.client('s3',
@@ -146,10 +148,10 @@ def save_to_s3(image, url_path, s3_name):
 
 # STRIPE SETUP
 stripe_keys = {
-    "secret_key": os.environ.get("STRIPE_SECRET_KEY"),
-    "publishable_key": os.environ.get("STRIPE_PUBLISHABLE_KEY"),
-    "price_id": os.environ.get("STRIPE_PRICE_ID"),
-
+    "secret_key": "sk_test_51PB3m7FCnvuCuyrQiLhgCTOkCY1faz4U2hcxzJyzVDsBC669XuJg69nnvbNfFHnhe6KTXXbOdyyYrJxBZzx4173G00fcC9O1VM",
+    "publishable_key": "pk_test_51PB3m7FCnvuCuyrQElzMQQT6F4nSdp94KTv773qyrcJlyVsG5nB7U4nUNM1N7FJEObJkgSLBMZQC5s5MFrCojOQb00pAkpEXhb",
+    "price_id": "price_1PBK7IFCnvuCuyrQyzSzN2Fq",
+    "endpoint_secret": "whsec_400ab6ec419190e2a8b0ebbed214579a0cda0285715cbc30046ec84fafbc41d6",
 }
 stripe.api_key = stripe_keys["secret_key"]
 
@@ -174,6 +176,12 @@ def get_vcard(vcard: VCard) -> io.BytesIO:
 # CREATE ROUTES AND RENDER HTML TEMPLATES
 @app.route('/payment', methods=['GET','POST'])
 def payment():
+    # print(f'payment {session['user_email']}')
+    # user_email = session['user_email']
+    # result = db.session.execute(db.select(User).where(User.email==user_email))
+    # user = result.scalar()
+    url_path = current_user.url_path
+    print(url_path)
     try:
         checkout_session = stripe.checkout.Session.create(
             line_items=[
@@ -184,23 +192,79 @@ def payment():
                 },
             ],
             mode='subscription',
-            success_url=request.host_url + 'payment-success',
+            success_url=request.host_url + f'payment-success?url_path={url_path}',
             cancel_url=request.host_url + 'payment-cancel',
             automatic_tax={'enabled': True},
         )
+        checkout_session_id = jsonify({"sessionId": checkout_session["id"]})
+        print(checkout_session_id)
     except Exception as e:
         return str(e)
 
     return redirect(checkout_session.url, code=303)
 
 
+@app.route("/webhook", methods=["POST"])
+def stripe_webhook():
+    event = None
+    payload = request.data
+
+    try:
+        event = json.loads(payload)
+    except json.decoder.JSONDecodeError as e:
+        print('⚠️  Webhook error while parsing basic request.' + str(e))
+        return jsonify(success=False)
+    if stripe_keys["endpoint_secret"]:
+        # Only verify the event if there is an endpoint secret defined
+        # Otherwise use the basic event deserialized with json
+        sig_header = request.headers.get('stripe-signature')
+        try:
+            event = stripe.Webhook.construct_event(
+                payload, sig_header, stripe_keys["endpoint_secret"]
+            )
+        except stripe.error.SignatureVerificationError as e:
+            print('⚠️  Webhook signature verification failed.' + str(e))
+            return jsonify(success=False)
+
+    # Handle the event
+    #TODO add event type for subscription cancelled
+    if event and event['type'] == 'checkout.session.completed':
+        customer_id = event['data']['object']['customer']
+        subscription_id = event['data']['object']['subscription']
+        payment_status = event['data']['object']['payment_status']
+        if payment_status=="paid":
+            print(f'Customer ID is {customer_id}')
+            print(f'Subscription ID is {subscription_id}')
+            print("Checkout complete, paid.")
+            new_stripe_customer=StripeCustomer(
+                user_url_path = current_user.url_path,
+                stripe_customer_id=customer_id,
+                stripe_subscription_id=subscription_id,
+                )
+            db.session.add(new_stripe_customer)
+            db.session.commit()
+        else:
+            print("Checkout complete, not paid")
+    else:
+        # Unexpected event type
+        print('Unhandled event type {}'.format(event['type']))
+
+    return jsonify(success=True)
+
 @app.route('/payment-success')
 def payment_success():
-    return render_template("success.html")
+    #TODO: link to /card and pass current user    
+    current_user.payment=True
+    db.session.commit()
+    flash(message="Payment Successful! Click Edit Card and Edit Images to customize your digital business card.")
+    return redirect(url_for('card', url_path=current_user.url_path))
 
 @app.route('/payment-cancel')
 def payment_cancel():
+    #TODO: link back to homepage
     return render_template("cancel.html")
+
+
 
 @app.route('/')
 def home():
@@ -221,7 +285,7 @@ def register():
             return redirect(url_for('login'))
         else:
             new_user = User(
-                email = request.form["email"],
+                email = request.form["email"].lower().strip(),
                 password = generate_password_hash(request.form.get('password'), method='pbkdf2:sha256', salt_length=8),
                 url_path = request.form["url_path"].lower(),
                 name = request.form["name"],
@@ -237,12 +301,17 @@ def register():
             
             # UPLOAD PROFILE PIC TO S3
             profile_pic = signup_form.picture.data
-            s3_profile_pic = secure_filename(signup_form.picture.data.filename)
-            url_path = request.form["url_path"].lower()
-            save_to_s3(profile_pic, url_path, s3_profile_pic)     
+            if profile_pic:
+                s3_profile_pic = secure_filename(signup_form.picture.data.filename)
+                url_path = request.form["url_path"].lower()
+                save_to_s3(profile_pic, url_path, s3_profile_pic)
             
             # SET SESSION USER EMAIL
-            session['user_email']=request.form["email"]
+            # session['user_email']=request.form["email"]
+            # print(session['user_email'])
+            login_user(new_user)
+            print(current_user)
+            print(current_user.url_path)
             return redirect(url_for('payment'))
     return render_template("register.html", signup_form=signup_form)
 
@@ -254,7 +323,7 @@ def login():
     login_form = LogInForm()
     session.pop('_flashes', None)
     if request.method=="POST" and login_form.validate_on_submit():
-        form_email = request.form.get('email')
+        form_email = request.form.get('email').lower().strip()
         form_password = request.form.get('password')
         result = db.session.execute(db.select(User).where(User.email == form_email))
         user = result.scalar()
@@ -274,11 +343,13 @@ def login():
 
 @app.route('/card/<url_path>', methods=["GET","POST"])
 def card(url_path):
+    print(f"top of card {url_path}")
     result = db.session.execute(db.select(User).where(User.url_path==url_path))
     user = result.scalar()
-    if user.payment ==True:
-
+    print(f"top of card {user}")
+    if user.payment==True:
         # GENERATE QR CODE
+        print(f"inside if {user.payment}")
         qr = qrcode.QRCode(version=3, box_size=5, border=5, error_correction=qrcode.constants.ERROR_CORRECT_H)
         qr_link = f"http://127.0.0.1:5000/card/{url_path}"
         qr.add_data(qr_link)
@@ -327,8 +398,9 @@ def card(url_path):
         # PASS CAN_EDIT FLAG TO SHOW MENU IF USER IS AUTHENTICATED
         if current_user.is_authenticated and current_user.url_path == user.url_path:
             can_edit=True
-            return render_template("bus_card.html", user=user, can_edit=can_edit, qr_img=qr_encoded.decode('utf-8'), profile_pic=profile_pic, work1_url=work1_url, work2_url=work2_url, work3_url=work3_url, work4_url=work4_url, work5_url=work5_url)
-        return render_template("bus_card.html", user=user, qr_img=qr_encoded.decode('utf-8'), profile_pic=profile_pic, work1_url=work1_url, work2_url=work2_url, work3_url=work3_url, work4_url=work4_url, work5_url=work5_url)
+        else:
+            can_edit=False
+        return render_template("bus_card.html", user=user, qr_img=qr_encoded.decode('utf-8'), profile_pic=profile_pic, work1_url=work1_url, work2_url=work2_url, work3_url=work3_url, work4_url=work4_url, work5_url=work5_url, can_edit=can_edit)
     else:
         return "Sorry, user doesn't exist"
 
