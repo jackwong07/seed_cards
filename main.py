@@ -2,8 +2,8 @@ from flask import Flask, render_template, redirect, url_for, request, session, s
 import os
 from flask_bootstrap import Bootstrap4
 from flask_sqlalchemy import SQLAlchemy
-from sqlalchemy.orm import DeclarativeBase, Mapped, mapped_column
-from sqlalchemy import Integer, String, Float, Boolean, Text
+from sqlalchemy.orm import DeclarativeBase, Mapped, mapped_column, relationship
+from sqlalchemy import Integer, String, Float, Boolean, Text, ForeignKey
 from werkzeug.security import generate_password_hash, check_password_hash
 from werkzeug.utils import secure_filename
 from flask_login import UserMixin, login_user, LoginManager, login_required, current_user, logout_user
@@ -15,7 +15,7 @@ import io
 import base64
 import boto3
 from botocore.client import Config
-
+import stripe
 
 
 
@@ -25,6 +25,8 @@ app = Flask(__name__, template_folder='templates')
 app.config['SECRET_KEY'] = "p$0s#9nfb0E48Q3W049*@B"
 bootstrap = Bootstrap4(app)
 app.config['MAX_CONTENT_LENGTH'] = 16 * 1024 * 1024
+
+YOUR_DOMAIN = 'http://localhost:5000'
 
 
 #CREATE DATABASE
@@ -43,7 +45,8 @@ ckeditor = CKEditor(app)
 #CREATE TABLE IN DB
 #define a model class to generate a table name
 class User(db.Model, UserMixin):
-    url_path: Mapped[str] = mapped_column(String(250), primary_key=True)
+    __tablename__ = "user_table"
+    url_path: Mapped[str] = mapped_column(String(250), primary_key=True, unique=True)
     email: Mapped[str] = mapped_column(String(250), unique=True, nullable=False)
     password: Mapped[str] = mapped_column(String(250), nullable=False)
     theme: Mapped[str] = mapped_column(String(250), nullable=True)
@@ -75,12 +78,30 @@ class User(db.Model, UserMixin):
     work5: Mapped[str] = mapped_column(String(250), nullable=True)    
     body: Mapped[str] = mapped_column(Text, nullable=True)    
     payment: Mapped[bool] = mapped_column(Boolean, nullable=True)
+    stripe_customer: Mapped["StripeCustomer"] = relationship(back_populates="user", uselist=False)
 
     def __repr__(self):
         return f"<User {self.name}>"
     
     def get_id(self):
            return (self.url_path)
+
+# STRIPE DATA
+class StripeCustomer(db.Model):
+    __tablename__="stripe_table"
+    
+    id: Mapped[int] = mapped_column(Integer, primary_key=True, unique=True, autoincrement=True)
+    user_url_path: Mapped[str] = mapped_column(String(250), db.ForeignKey("user_table.url_path"))    
+    user: Mapped["User"] = relationship(back_populates="stripe_customer")
+    stripe_customer_id: Mapped[str] = mapped_column(String(250), nullable=False, unique=True)
+    stripe_subscription_id: Mapped[str] = mapped_column(String(250), nullable=False, unique=True)
+    
+    def __repr__(self):
+        return f"<User {self.stripe_customer_id}>"
+    
+    def get_id(self):
+           return (self.id)
+
 
 #create table schema in database
 with app.app_context():
@@ -123,6 +144,16 @@ def save_to_s3(image, url_path, s3_name):
         Body=buffer)  
 
 
+# STRIPE SETUP
+stripe_keys = {
+    "secret_key": os.environ.get("STRIPE_SECRET_KEY"),
+    "publishable_key": os.environ.get("STRIPE_PUBLISHABLE_KEY"),
+    "price_id": os.environ.get("STRIPE_PRICE_ID"),
+
+}
+stripe.api_key = stripe_keys["secret_key"]
+
+
 #GENERATE VCF FILE TO SAVE CONTACTS
 def get_vcard(vcard: VCard) -> io.BytesIO:
     # Render the vcard template with the user's data,
@@ -141,6 +172,36 @@ def get_vcard(vcard: VCard) -> io.BytesIO:
 
 
 # CREATE ROUTES AND RENDER HTML TEMPLATES
+@app.route('/payment', methods=['GET','POST'])
+def payment():
+    try:
+        checkout_session = stripe.checkout.Session.create(
+            line_items=[
+                {
+                    # Provide the exact Price ID (for example, pr_1234) of the product you want to sell
+                    'price': stripe_keys["price_id"],
+                    'quantity': 1,
+                },
+            ],
+            mode='subscription',
+            success_url=request.host_url + 'payment-success',
+            cancel_url=request.host_url + 'payment-cancel',
+            automatic_tax={'enabled': True},
+        )
+    except Exception as e:
+        return str(e)
+
+    return redirect(checkout_session.url, code=303)
+
+
+@app.route('/payment-success')
+def payment_success():
+    return render_template("success.html")
+
+@app.route('/payment-cancel')
+def payment_cancel():
+    return render_template("cancel.html")
+
 @app.route('/')
 def home():
     session.pop('_flashes', None)
@@ -186,23 +247,6 @@ def register():
     return render_template("register.html", signup_form=signup_form)
 
 
-@app.route('/payment', methods=["GET","POST"])
-def payment():
-    payment_form = PaymentForm()
-    if payment_form.validate_on_submit():
-        session_email = session['user_email']
-        result = db.session.execute(db.select(User).where(User.email==session_email))
-        user = result.scalar()
-        login_user(user)
-        current_user.payment = True
-        db.session.commit()
-        # new_payment = User(
-        #                   name = signup_form.name.data,
-        #                   email = signup_form.email.data,
-        #                   job_title = signup_form.job_title.data,
-        #                 )
-        return redirect(url_for('card', url_path=current_user.url_path))
-    return render_template("payment_form.html", payment_form=payment_form)
 
 
 @app.route('/login', methods=["GET","POST"])
