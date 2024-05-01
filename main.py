@@ -3,7 +3,7 @@ import os
 from flask_bootstrap import Bootstrap4
 from flask_sqlalchemy import SQLAlchemy
 from sqlalchemy.orm import DeclarativeBase, Mapped, mapped_column, relationship
-from sqlalchemy import Integer, String, Float, Boolean, Text, ForeignKey
+from sqlalchemy import and_, Integer, String, Float, Boolean, Text, ForeignKey, desc
 from werkzeug.security import generate_password_hash, check_password_hash
 from werkzeug.utils import secure_filename
 from flask_login import UserMixin, login_user, LoginManager, login_required, current_user, logout_user
@@ -48,7 +48,8 @@ ckeditor = CKEditor(app)
 #define a model class to generate a table name
 class User(db.Model, UserMixin):
     __tablename__ = "user_table"
-    url_path: Mapped[str] = mapped_column(String(250), primary_key=True, unique=True)
+    id: Mapped[int] = mapped_column(Integer, primary_key=True, unique=True, autoincrement=True)
+    url_path: Mapped[str] = mapped_column(String(250), unique=True)
     email: Mapped[str] = mapped_column(String(250), unique=True, nullable=False)
     password: Mapped[str] = mapped_column(String(250), nullable=False)
     theme: Mapped[str] = mapped_column(String(250), nullable=True)
@@ -80,26 +81,12 @@ class User(db.Model, UserMixin):
     work5: Mapped[str] = mapped_column(String(250), nullable=True)    
     body: Mapped[str] = mapped_column(Text, nullable=True)    
     payment: Mapped[bool] = mapped_column(Boolean, nullable=True)
-    stripe_customer: Mapped["StripeCustomer"] = relationship(back_populates="user", uselist=False)
+    stripe_session_id: Mapped[str] = mapped_column(String(250), nullable=True, unique=True)
+    stripe_customer_id: Mapped[str] = mapped_column(String(250), nullable=True, unique=True)
+    stripe_subscription_id: Mapped[str] = mapped_column(String(250), nullable=True, unique=True)
 
     def __repr__(self):
         return f"<User {self.name}>"
-    
-    def get_id(self):
-           return (self.url_path)
-
-# STRIPE DATA
-class StripeCustomer(db.Model):
-    __tablename__="stripe_table"
-    
-    id: Mapped[int] = mapped_column(Integer, primary_key=True, unique=True, autoincrement=True)
-    user_url_path: Mapped[str] = mapped_column(String(250), db.ForeignKey("user_table.url_path"))    
-    user: Mapped["User"] = relationship(back_populates="stripe_customer")
-    stripe_customer_id: Mapped[str] = mapped_column(String(250), nullable=False, unique=True)
-    stripe_subscription_id: Mapped[str] = mapped_column(String(250), nullable=False, unique=True)
-    
-    def __repr__(self):
-        return f"<User {self.stripe_customer_id}>"
     
     def get_id(self):
            return (self.id)
@@ -176,10 +163,6 @@ def get_vcard(vcard: VCard) -> io.BytesIO:
 # CREATE ROUTES AND RENDER HTML TEMPLATES
 @app.route('/payment', methods=['GET','POST'])
 def payment():
-    # print(f'payment {session['user_email']}')
-    # user_email = session['user_email']
-    # result = db.session.execute(db.select(User).where(User.email==user_email))
-    # user = result.scalar()
     url_path = current_user.url_path
     print(url_path)
     try:
@@ -192,12 +175,14 @@ def payment():
                 },
             ],
             mode='subscription',
-            success_url=request.host_url + f'payment-success?url_path={url_path}',
-            cancel_url=request.host_url + 'payment-cancel',
+            success_url=url_for('payment_success', _external=True)+"?session_id={CHECKOUT_SESSION_ID}",
+            cancel_url=url_for('home', _external=True),
             automatic_tax={'enabled': True},
         )
-        checkout_session_id = jsonify({"sessionId": checkout_session["id"]})
-        print(checkout_session_id)
+        #print("session: ", checkout_session.id, checkout_session.url, checkout_session)
+        stripe_session_id = checkout_session.id
+        current_user.stripe_session_id = stripe_session_id
+        db.session.commit()
     except Exception as e:
         return str(e)
 
@@ -208,7 +193,7 @@ def payment():
 def stripe_webhook():
     event = None
     payload = request.data
-
+    
     try:
         event = json.loads(payload)
     except json.decoder.JSONDecodeError as e:
@@ -231,18 +216,16 @@ def stripe_webhook():
     if event and event['type'] == 'checkout.session.completed':
         customer_id = event['data']['object']['customer']
         subscription_id = event['data']['object']['subscription']
+        session_id = event['data']['object']['id']
         payment_status = event['data']['object']['payment_status']
         if payment_status=="paid":
-            print(f'Customer ID is {customer_id}')
-            print(f'Subscription ID is {subscription_id}')
             print("Checkout complete, paid.")
-            new_stripe_customer=StripeCustomer(
-                user_url_path = current_user.url_path,
-                stripe_customer_id=customer_id,
-                stripe_subscription_id=subscription_id,
-                )
-            db.session.add(new_stripe_customer)
+            result = db.session.execute(db.select(User).where(and_(User.stripe_subscription_id==session_id, User.payment==False)))
+            user = result.scalar()
+            user.stripe_customer_id = customer_id
+            user.stripe_subscription_id = subscription_id
             db.session.commit()
+            print(user.stripe_customer_id)
         else:
             print("Checkout complete, not paid")
     else:
@@ -259,10 +242,6 @@ def payment_success():
     flash(message="Payment Successful! Click Edit Card and Edit Images to customize your digital business card.")
     return redirect(url_for('card', url_path=current_user.url_path))
 
-@app.route('/payment-cancel')
-def payment_cancel():
-    #TODO: link back to homepage
-    return render_template("cancel.html")
 
 
 
@@ -296,6 +275,7 @@ def register():
                 colors="light",
                 headline_description="Lorem ipsum dolor sit amet, consectetur adipiscing elit, sed do eiusmod tempor incididunt ut labore et dolore magna aliqua. Ut enim ad minim veniam, quis nostrud exercitation ullamco laboris nisi ut aliquip ex ea commodo consequat."
             )
+            
             db.session.add(new_user)
             db.session.commit()
             
@@ -306,12 +286,9 @@ def register():
                 url_path = request.form["url_path"].lower()
                 save_to_s3(profile_pic, url_path, s3_profile_pic)
             
-            # SET SESSION USER EMAIL
-            # session['user_email']=request.form["email"]
-            # print(session['user_email'])
+
             login_user(new_user)
-            print(current_user)
-            print(current_user.url_path)
+
             return redirect(url_for('payment'))
     return render_template("register.html", signup_form=signup_form)
 
