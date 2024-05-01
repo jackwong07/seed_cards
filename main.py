@@ -82,6 +82,7 @@ class User(db.Model, UserMixin):
     body: Mapped[str] = mapped_column(Text, nullable=True)    
     payment: Mapped[bool] = mapped_column(Boolean, nullable=True)
     stripe_session_id: Mapped[str] = mapped_column(String(250), nullable=True, unique=True)
+    #TODO make customer id and subscription id not unique
     stripe_customer_id: Mapped[str] = mapped_column(String(250), nullable=True, unique=True)
     stripe_subscription_id: Mapped[str] = mapped_column(String(250), nullable=True, unique=True)
     stripe_payment_status: Mapped[str] = mapped_column(String(250), nullable=True, unique=True)
@@ -211,8 +212,7 @@ def stripe_webhook():
             print('⚠️  Webhook signature verification failed.' + str(e))
             return jsonify(success=False)
 
-    # Handle the event
-    #TODO add event type for subscription cancelled
+    # HANDLE EVENTS
     if event and event['type'] == 'checkout.session.completed':
         customer_id = event['data']['object']['customer']
         subscription_id = event['data']['object']['subscription']
@@ -229,10 +229,14 @@ def stripe_webhook():
         else:
             print("Checkout complete, not paid")
     if event['type']=="customer.subscription.deleted":
-        result = db.session.execute(db.select(User).where(and_(User.stripe_subscription_id==session_id, User.payment==True)))
+        cancelled_customer_id = event['data']['object']['customer']
+        # cancelled_subscription_id = event['data']['object']['id']
+        # cancelled_payment_status = event['data']['object']['status']        
+        result = db.session.execute(db.select(User).where(and_(User.stripe_customer_id==cancelled_customer_id, User.payment==True)))
         user = result.scalar()
-        user.stripe_payment_status= event['data']['object']['status']
-        user.payment=False
+        # user.stripe_payment_status= cancelled_payment_status
+        # user.payment=False
+        db.session.delete(user)
         db.session.commit()
         print("Listened for account subscription deleted")
     else:
@@ -324,6 +328,12 @@ def login():
     return render_template("login.html", login_form=login_form)
 
 
+@app.route('/logout', methods=["GET","POST"])
+def logout():
+    url_path = current_user.url_path
+    logout_user()
+    return redirect(url_for('card', url_path=url_path))
+
 
 @app.route('/card/<url_path>', methods=["GET","POST"])
 def card(url_path):
@@ -331,63 +341,63 @@ def card(url_path):
     result = db.session.execute(db.select(User).where(User.url_path==url_path))
     user = result.scalar()
     print(f"top of card {user}")
-    # if user.payment==True:
-        # # GENERATE QR CODE
-        # print(f"inside if {user.payment}")
-        # qr = qrcode.QRCode(version=3, box_size=5, border=5, error_correction=qrcode.constants.ERROR_CORRECT_H)
-        # qr_link = f"http://127.0.0.1:5000/card/{url_path}"
-        # qr.add_data(qr_link)
-        # qr.make(fit=True)
-        # qr_img = qr.make_image(fill_color="black", back_color="white")
+    if user:
+        if user.payment==True:
+            # GENERATE QR CODE
+            print(f"inside if {user.payment}")
+            qr = qrcode.QRCode(version=3, box_size=5, border=5, error_correction=qrcode.constants.ERROR_CORRECT_H)
+            qr_link = f"http://127.0.0.1:5000/card/{url_path}"
+            qr.add_data(qr_link)
+            qr.make(fit=True)
+            qr_img = qr.make_image(fill_color="black", back_color="white")
 
-        # buffer = io.BytesIO()
-        # buffer.seek(0)
-        # buffer.truncate(0)
-        # qr_img.save(buffer, format="png")
-        # qr_encoded = base64.b64encode(buffer.getvalue())
-        
-        # # GRAB IMAGES FROM S3
-        # # PROFILE PIC
-        # if user.profile_pic:
-        #     profile_pic = s3.generate_presigned_url("get_object", Params={"Bucket": BUCKET_NAME, "Key": f"{url_path}_{user.profile_pic}"}, ExpiresIn=30)
-        # else:
-        #     profile_pic = None
-        
-        # # WORKS
-        # if user.work1:
-        #     work1_url = s3.generate_presigned_url("get_object", Params={"Bucket": BUCKET_NAME, "Key": f"{url_path}_{user.work1}"}, ExpiresIn=30)
-        # else:
-        #     work1_url = None
+            buffer = io.BytesIO()
+            buffer.seek(0)
+            buffer.truncate(0)
+            qr_img.save(buffer, format="png")
+            qr_encoded = base64.b64encode(buffer.getvalue())
+            
+            # GRAB IMAGES FROM S3
+            # PROFILE PIC
+            if user.profile_pic and user.profile_pic!="":
+                profile_pic = s3.generate_presigned_url("get_object", Params={"Bucket": BUCKET_NAME, "Key": f"{url_path}_{user.profile_pic}"}, ExpiresIn=30)
+            else:
+                profile_pic = None
+            
+            # # WORKS
+            if user.work1 and user.work1!="":
+                work1_url = s3.generate_presigned_url("get_object", Params={"Bucket": BUCKET_NAME, "Key": f"{url_path}_{user.work1}"}, ExpiresIn=30)
+            else:
+                work1_url = None
 
-        # if user.work2:
-        #     work2_url = s3.generate_presigned_url("get_object", Params={"Bucket": BUCKET_NAME, "Key": f"{url_path}_{user.work2}"}, ExpiresIn=30)
-        # else:
-        #     work2_url = None
-        
-        # if user.work3:
-        #     work3_url = s3.generate_presigned_url("get_object", Params={"Bucket": BUCKET_NAME, "Key": f"{url_path}_{user.work3}"}, ExpiresIn=30)
-        # else:
-        #     work3_url = None  
+            if user.work2 and user.work1!="":
+                work2_url = s3.generate_presigned_url("get_object", Params={"Bucket": BUCKET_NAME, "Key": f"{url_path}_{user.work2}"}, ExpiresIn=30)
+            else:
+                work2_url = None
             
-        # if user.work4:
-        #     work4_url = s3.generate_presigned_url("get_object", Params={"Bucket": BUCKET_NAME, "Key": f"{url_path}_{user.work4}"}, ExpiresIn=30)
-        # else:
-        #     work4_url = None  
-        
-        # if user.work5:
-        #     work5_url = s3.generate_presigned_url("get_object", Params={"Bucket": BUCKET_NAME, "Key": f"{url_path}_{user.work5}"}, ExpiresIn=30)
-        # else:
-        #     work5_url = None  
+            if user.work3 and user.work1!="":
+                work3_url = s3.generate_presigned_url("get_object", Params={"Bucket": BUCKET_NAME, "Key": f"{url_path}_{user.work3}"}, ExpiresIn=30)
+            else:
+                work3_url = None  
+                
+            if user.work4 and user.work1!="":
+                work4_url = s3.generate_presigned_url("get_object", Params={"Bucket": BUCKET_NAME, "Key": f"{url_path}_{user.work4}"}, ExpiresIn=30)
+            else:
+                work4_url = None  
             
-        # # PASS CAN_EDIT FLAG TO SHOW MENU IF USER IS AUTHENTICATED
-        # if current_user.is_authenticated and current_user.url_path == user.url_path:
-        #     can_edit=True
-        # else:
-        #     can_edit=False
-    return render_template("bus_card.html", user=user)
-                                #,qr_img=qr_encoded.decode('utf-8'), profile_pic=profile_pic, work1_url=work1_url, work2_url=work2_url, work3_url=work3_url, work4_url=work4_url, work5_url=work5_url, can_edit=can_edit)
-    # else:
-    #     return "Sorry, user doesn't exist"
+            if user.work5 and user.work1!="":
+                work5_url = s3.generate_presigned_url("get_object", Params={"Bucket": BUCKET_NAME, "Key": f"{url_path}_{user.work5}"}, ExpiresIn=30)
+            else:
+                work5_url = None  
+                
+            # PASS CAN_EDIT FLAG TO SHOW MENU IF USER IS AUTHENTICATED
+            if current_user.is_authenticated and current_user.url_path == user.url_path:
+                can_edit=True
+            else:
+                can_edit=False
+            return render_template("bus_card.html", user=user, can_edit=can_edit, qr_img=qr_encoded.decode('utf-8'), work1_url=work1_url, work2_url=work2_url, work3_url=work3_url, work4_url=work4_url, work5_url=work5_url, profile_pic=profile_pic)
+    else:
+        return render_template("no_user_found.html")
 
 
 @app.route("/vcard/download/<url_path>")

@@ -20,10 +20,22 @@
       <li class="nav-item"><a href="{{ url_for('edit_card', url_path=current_user.url_path)}}" class="nav-link magazine_temp">Edit Card</a></li>
       <li class="nav-item"><a href="{{ url_for('edit_images', url_path=current_user.url_path)}}" class="nav-link magazine_temp">Edit Images</a></li>      
       <li class="nav-item"><a href="{{ url_for('edit_account', url_path=current_user.url_path)}}" class="nav-link magazine_temp">Edit Account</a></li>
+      <li class="nav-item"><a href="{{ url_for('logout')}}" class="nav-link magazine_temp">Logout</a></li>    
     </ul>
   </div>
 </div>
 {% endif %}
+
+{% if not can_edit: %}
+<div class="container">
+  <div class="d-flex flex-wrap justify-content-left mb-2 border-bottom">
+    <ul class="nav">
+      <li class="nav-item"><a href="{{ url_for('login')}}" class="nav-link magazine_temp">Login</a></li>
+    </ul>
+  </div>
+</div>
+{% endif %}
+
 
 {% with messages = get_flashed_messages() %}
 {% if messages %}
@@ -34,8 +46,14 @@
 
 
 <!-- Profile Image-->
+{%if profile_pic %}
 <div class="hero" style="position: relative; background-image: url('{{profile_pic}}')">
-  
+{%endif %}
+
+{%if not profile_pic %}
+<div class="hero" style="position: relative;">
+{%endif %}
+
 
 
   <div class="justify-content-left position-absolute" style="bottom:10px">
@@ -164,7 +182,7 @@
 
 <!-- Description -->
   <div>
-    <p class="body-text magazine_temp card-text text-start">{{user.body | safe}}</p>
+    <p class="body-text magazine_temp card-text text-start" style="color:black">{{user.body | safe}}</p>
   </div>
 
   

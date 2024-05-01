@@ -1,0 +1,156 @@
+<!DOCTYPE html>
+<html>
+    <head>
+        <meta charset="utf-8">
+        <title>Digital Business Card</title>
+        <meta name="description" content="">
+        <meta name="viewport" content="width=device-width, initial-scale=1">
+        <link href="https://cdn.jsdelivr.net/npm/bootstrap@5.3.3/dist/css/bootstrap.min.css" rel="stylesheet" integrity="sha384-QWTKZyjpPEjISv5WaRU9OFeRpok6YctnYmDr5pNlyT2bRjXh0JMhjY6hW+ALEwIH" crossorigin="anonymous">
+        <link rel="stylesheet" href="/static/css/style.css">
+    </head>
+<body class="magazine">
+
+<div class = "container-fluid col-12 col-sm-8 col-lg-6 justify-content-between">
+
+<!--  Menu -->
+{% if not can_edit: %}
+<div class="container">
+  <div class="d-flex flex-wrap justify-content-left mb-2 border-bottom">
+    <ul class="nav">
+      <li class="nav-item"><a href="{{ url_for('login')}}" class="nav-link magazine_temp">Login</a></li>
+      <li class="nav-item"><a href="{{ url_for('register')}}" class="nav-link magazine_temp">Sign Up</a></li>
+    </ul>
+  </div>
+</div>
+{% endif %}
+
+
+{% with messages = get_flashed_messages() %}
+{% if messages %}
+  <p style="color: green">{{ messages[-1] }}</p>
+{% endif %}
+{% endwith %}
+
+
+<div class="site-heading">
+<h1>This URL path isn't linked to anyone.</h1> 
+<h6>Good news, the URL path is available. Either 
+    <a href="{{ url_for('login')}}">Login</a>
+     to be redirected to your card or 
+    <a href="{{ url_for('register')}}">Sign Up</a>
+    to create one for yourself.</h6>
+<h6>Below is an example of a digital business card.</h6>
+</div>
+
+<hr>
+
+<!-- Profile Image-->
+<div class="hero" style="position: relative; background-image: url('https://images.unsplash.com/photo-1491557345352-5929e343eb89?q=80&w=2070&auto=format&fit=crop&ixlib=rb-4.0.3&ixid=M3wxMjA3fDB8MHxwaG90by1wYWdlfHx8fGVufDB8fHx8fA%3D%3D')">
+
+
+  <div class="justify-content-left position-absolute" style="bottom:10px">
+    <div class="site-heading magazine_temp">
+      <h1>John Smith</h1>
+    </div>
+    <div class="sub-heading magazine_temp">
+      <h3>Example Co Cofounder</h3>
+    </div>
+  </div>
+</div>
+
+
+<!-- Top details-->
+<br>
+  <div class="row d-flex justify-content-left">
+    <div class="text-left">
+        <p style="font-size: 14pt">Example Company | New York, NY</p>
+      
+
+        <p class="card-text text-start"><small>Lorem ipsum dolor sit amet, consectetur adipiscing elit, sed do eiusmod tempor incididunt ut labore et dolore magna aliqua. Ut enim ad minim veniam, quis nostrud exercitation ullamco laboris nisi ut aliquip ex ea commodo consequat.</small></p>
+      <a href="#" class="card-link" style="font-size: 14pt">example-site.com</a>
+    <hr/>
+      <div class="card-body">
+        <a href="https://www.instagram.com/" class="pe-4"><img src="/static/social_icons/Instagram.svg" width="35" height="35"/></a>
+        <a href="https://www.linkedin.com/" class="pe-4"><img src="/static/social_icons/LinkedIn.svg" width="35" height="35"/></a>
+        <a href="tiktok.com" class="pe-4"><img src="/static/social_icons/TikTok.svg" width="35" height="35"/></a>
+        <a href="https://github.com/" class="pe-4"><img src="/static/social_icons/Github.svg" width="35" height="35"/></a>
+      </div>
+    <br>
+      <a href="mailto: exampleemail@gmail.com" class="card-link" style="font-size: 14pt">exampleemail@gmail.com</a>          
+      
+      <p class="card-text text-start"style="font-size: 12pt">+1 123-456-7890</p>
+    </div>
+  </div>
+<br/>
+
+
+
+
+
+
+
+<!-- Buttons -->
+
+<div class="d-flex card-body justify-content-around">
+
+<button type="button" class="btn btn-primary" data-bs-toggle="modal" data-bs-target="#QRCodeModal" style="background-color: black; width: 150px">
+  QR Code
+</button>
+<!-- Modal -->
+<div class="modal fade" id="QRCodeModal" tabindex="-1" aria-labelledby="exampleModalLabel" aria-hidden="true">
+  <div class="modal-dialog">
+    <div class="modal-content">
+      <div class="modal-header">
+        <h5 class="modal-title" id="modal-title">Scan your QR Code</h5>
+        <button type="button" class="btn-close" data-bs-dismiss="modal" aria-label="Close"></button>
+      </div>
+        <div class="modal-body">
+          <img src="#">
+        </div>
+    </div>
+  </div>
+</div>
+
+
+
+    <button type="button" class="btn btn-warning" style="width: 150px"><a style="color: black; text-decoration: none" href="#">Save Contact</a></button>
+  </div>
+
+
+  <br/>
+  <br/>
+
+<!-- Works -->
+<div class="card text-left">
+    <img id="work-image" src="https://images.unsplash.com/photo-1714329781250-64b9125f689c?q=80&w=1932&auto=format&fit=crop&ixlib=rb-4.0.3&ixid=M3wxMjA3fDB8MHxwaG90by1wYWdlfHx8fGVufDB8fHx8fA%3D%3D"></img>
+</div>
+<br/>
+
+<div class="card text-left">
+    <img id="work-image" src="https://images.unsplash.com/photo-1713692598010-49c58f84d1eb?q=80&w=1887&auto=format&fit=crop&ixlib=rb-4.0.3&ixid=M3wxMjA3fDB8MHxwaG90by1wYWdlfHx8fGVufDB8fHx8fA%3D%3D"></img>
+</div>
+  <br/>
+
+  <div class="card text-left">
+    <img id="work-image" src="https://images.unsplash.com/photo-1714415907817-b18ba57a6c1f?q=80&w=1780&auto=format&fit=crop&ixlib=rb-4.0.3&ixid=M3wxMjA3fDB8MHxwaG90by1wYWdlfHx8fGVufDB8fHx8fA%3D%3D"></img>
+</div>
+  <br/>
+  
+  <div>
+    <p class="body-text magazine_temp card-text text-start" style="color:black">Sed ut perspiciatis unde omnis iste natus error sit voluptatem accusantium doloremque laudantium, totam rem aperiam, eaque ipsa quae ab illo inventore veritatis et quasi architecto beatae vitae dicta sunt explicabo. Nemo enim ipsam voluptatem quia voluptas sit aspernatur aut odit aut fugit, sed quia consequuntur magni dolores eos qui ratione voluptatem sequi nesciunt. Neque porro quisquam est, qui dolorem ipsum quia dolor sit amet, consectetur, adipisci velit, sed quia non numquam eius modi tempora incidunt ut labore et dolore magnam aliquam quaerat voluptatem. Ut enim ad minima veniam, quis nostrum exercitationem ullam corporis suscipit laboriosam, nisi ut aliquid ex ea commodi consequatur? Quis autem vel eum iure reprehenderit qui in ea voluptate velit esse quam nihil molestiae consequatur, vel illum qui dolorem eum fugiat quo voluptas nulla pariatur?</p>
+  </div>
+
+
+<hr>
+   <div class="container link-back align-items-right" >
+   <p style="color:black">Digital Business Card made by 
+    <a  href="{{url_for('home')}}">DigiBusi</a>
+   </p>
+   </div>
+
+  </div>
+
+  <script src="https://cdn.jsdelivr.net/npm/bootstrap@5.3.3/dist/js/bootstrap.bundle.min.js" integrity="sha384-YvpcrYf0tY3lHB60NNkmXc5s9fDVZLESaAA55NDzOxhy9GkcIdslK1eN7N6jIeHz" crossorigin="anonymous"></script>
+
+</body>
+</html>
