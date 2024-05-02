@@ -17,13 +17,9 @@ import boto3
 from botocore.client import Config
 import stripe
 import json
-import random
-import string
-import smtplib
+from email_logic import *
 
-#TODO add to environment variables, get business email
-my_email = "jackmail07@gmail.com"
-password= "pmqxxxifsbshkyfr"
+
 
 #CREATE AND INITIALIZE FLASK APP
 app = Flask(__name__, template_folder='templates')
@@ -170,33 +166,65 @@ def get_vcard(vcard: VCard) -> io.BytesIO:
 
     return file_
 
-# SEND EMAIL FOR FORGOT PASSWORD FLOW, SENDING TEMPORARY PASSWORD
-def email_temp_password(user):
-    temp_pass = ''.join(random.choices(string.ascii_uppercase + 
-                                 string.digits, k=8))
-    with open(f"temp_password.txt", mode='r') as template:
-        content = template.read()
-        content = content.replace("[NAME]", user.name)
-        content = content.replace("[EMAIL]", user.email)
-        content = content.replace("[URL_PATH]", user.url_path)
-        content = content.replace("[TEMPORARY_PASSWORD]", temp_pass)
-    
-    with open(f"{user.name}_email.txt", mode='w') as send_email:
-        send_email.write(content)
-        
-    with smtplib.SMTP("smtp.gmail.com") as connection:
-        connection.starttls()
-        connection.login(user=my_email, password=password)
-        connection.sendmail(from_addr=my_email, 
-                            to_addrs= user.email,
-                            msg=f"Seed Cards Temporary Password\n\n{content}")
-    
-    return temp_pass
+
 
 
 
 
 # CREATE ROUTES AND RENDER HTML TEMPLATES
+
+# HOME
+@app.route('/')
+def home():
+    session.pop('_flashes', None)
+    # PASS LOGGED_IN FLAG TO SHOW MENU IF USER IS AUTHENTICATED
+    logged_in = logged_in_status(current_user)
+    return render_template("index.html", logged_in=logged_in, current_user=current_user)
+
+# SIGN UP
+@app.route('/register', methods=["GET","POST"])
+def register():
+    signup_form = SignupForm()
+    if request.method=="POST" and signup_form.validate_on_submit():
+        form_email = request.form['email']
+        result = db.session.execute(db.select(User).where(User.email==form_email))
+        user = result.scalar()
+        if user:
+            #if user already exists
+            flash("You already have an account with this email. Please log in.")
+            return redirect(url_for('login'))
+        else:
+            new_user = User(
+                email = request.form["email"].lower().strip(),
+                password = generate_password_hash(request.form.get('password'), method='pbkdf2:sha256', salt_length=8),
+                url_path = request.form["url_path"].lower(),
+                name = request.form["name"],
+                job_title = request.form["job_title"],
+                profile_pic = secure_filename(signup_form.picture.data.filename),
+                payment=False,
+                theme="magazine",
+                colors="light",
+                headline_description="Lorem ipsum dolor sit amet, consectetur adipiscing elit, sed do eiusmod tempor incididunt ut labore et dolore magna aliqua. Ut enim ad minim veniam, quis nostrud exercitation ullamco laboris nisi ut aliquip ex ea commodo consequat."
+            )
+            
+            db.session.add(new_user)
+            db.session.commit()
+            
+            # UPLOAD PROFILE PIC TO S3
+            profile_pic = signup_form.picture.data
+            if profile_pic:
+                s3_profile_pic = secure_filename(signup_form.picture.data.filename)
+                url_path = request.form["url_path"].lower()
+                save_to_s3(profile_pic, url_path, s3_profile_pic)
+            
+
+            login_user(new_user)
+
+            return redirect(url_for('payment'))
+    logged_in = logged_in_status(current_user)
+    return render_template("register.html", signup_form=signup_form, logged_in=logged_in)
+
+# STRIPE PAYMENT
 @app.route('/payment', methods=['GET','POST'])
 def payment():
     url_path = current_user.url_path
@@ -289,60 +317,7 @@ def payment_success():
 
 
 
-
-@app.route('/')
-def home():
-    session.pop('_flashes', None)
-    # PASS LOGGED_IN FLAG TO SHOW MENU IF USER IS AUTHENTICATED
-    logged_in = logged_in_status(current_user)
-    return render_template("index.html", logged_in=logged_in, current_user=current_user)
-
-
-@app.route('/register', methods=["GET","POST"])
-def register():
-    signup_form = SignupForm()
-    if request.method=="POST" and signup_form.validate_on_submit():
-        form_email = request.form['email']
-        result = db.session.execute(db.select(User).where(User.email==form_email))
-        user = result.scalar()
-        if user:
-            #if user already exists
-            flash("You already have an account with this email. Please log in.")
-            return redirect(url_for('login'))
-        else:
-            new_user = User(
-                email = request.form["email"].lower().strip(),
-                password = generate_password_hash(request.form.get('password'), method='pbkdf2:sha256', salt_length=8),
-                url_path = request.form["url_path"].lower(),
-                name = request.form["name"],
-                job_title = request.form["job_title"],
-                profile_pic = secure_filename(signup_form.picture.data.filename),
-                payment=False,
-                theme="magazine",
-                colors="light",
-                headline_description="Lorem ipsum dolor sit amet, consectetur adipiscing elit, sed do eiusmod tempor incididunt ut labore et dolore magna aliqua. Ut enim ad minim veniam, quis nostrud exercitation ullamco laboris nisi ut aliquip ex ea commodo consequat."
-            )
-            
-            db.session.add(new_user)
-            db.session.commit()
-            
-            # UPLOAD PROFILE PIC TO S3
-            profile_pic = signup_form.picture.data
-            if profile_pic:
-                s3_profile_pic = secure_filename(signup_form.picture.data.filename)
-                url_path = request.form["url_path"].lower()
-                save_to_s3(profile_pic, url_path, s3_profile_pic)
-            
-
-            login_user(new_user)
-
-            return redirect(url_for('payment'))
-    logged_in = logged_in_status(current_user)
-    return render_template("register.html", signup_form=signup_form, logged_in=logged_in)
-
-
-
-
+# LOGIN AND LOGOUT
 @app.route('/login', methods=["GET","POST"])
 def login():
     if current_user.is_authenticated:
@@ -373,14 +348,12 @@ def forgot_password():
     session.pop('_flashes', None)
     form = ForgotPasswordForm()
     if request.method=="POST":
-        result = db.session.execute(db.select(User).where(or_(User.email==request.form.get('email'), User.url_path==request.form.get('url_path'))))
+        result = db.session.execute(db.select(User).where(or_(User.email==request.form.get('email').lower().strip(), User.url_path==request.form.get('url_path').lower().strip())))
         user = result.scalar()
         if user:
             temp_pass = email_temp_password(user)
             user.password = generate_password_hash(temp_pass, method='pbkdf2:sha256', salt_length=8)
             db.session.commit()
-            print(temp_pass)
-            print(user.password)
             flash("Please check your email for a temporary password that you can use to login. For security, please update to a new password in Edit Account.")
             return redirect(url_for('login'))
         else:
@@ -397,6 +370,9 @@ def logout():
     return redirect(url_for('card', url_path=url_path))
 
 
+
+
+# BUSINESS CARD PAGE
 @app.route('/card/<url_path>', methods=["GET","POST"])
 def card(url_path):
     print(f"top of card {url_path}")
