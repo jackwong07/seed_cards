@@ -21,7 +21,7 @@ import random
 import string
 import smtplib
 
-#TODO add to environment variables
+#TODO add to environment variables, get business email
 my_email = "jackmail07@gmail.com"
 password= "pmqxxxifsbshkyfr"
 
@@ -165,14 +165,14 @@ def get_vcard(vcard: VCard) -> io.BytesIO:
 
 # SEND EMAIL FOR FORGOT PASSWORD FLOW, SENDING TEMPORARY PASSWORD
 def email_temp_password(user):
+    temp_pass = ''.join(random.choices(string.ascii_uppercase + 
+                                 string.digits, k=8))
     with open(f"temp_password.txt", mode='r') as template:
         content = template.read()
         content = content.replace("[NAME]", user.name)
         content = content.replace("[EMAIL]", user.email)
         content = content.replace("[URL_PATH]", user.url_path)
-        res = ''.join(random.choices(string.ascii_uppercase +
-                             string.digits, k=8))
-        content = content.replace("[TEMPORARY_PASSWORD]", res)
+        content = content.replace("[TEMPORARY_PASSWORD]", temp_pass)
     
     with open(f"{user.name}_email.txt", mode='w') as send_email:
         send_email.write(content)
@@ -183,6 +183,8 @@ def email_temp_password(user):
         connection.sendmail(from_addr=my_email, 
                             to_addrs= user.email,
                             msg=f"Seed Cards Temporary Password\n\n{content}")
+    
+    return temp_pass
 
 
 
@@ -331,7 +333,11 @@ def register():
             login_user(new_user)
 
             return redirect(url_for('payment'))
-    return render_template("register.html", signup_form=signup_form)
+    if current_user.is_authenticated:
+        logged_in=True
+    else:
+        logged_in=False
+    return render_template("register.html", signup_form=signup_form, logged_in=logged_in)
 
 
 
@@ -369,8 +375,13 @@ def forgot_password():
         result = db.session.execute(db.select(User).where(or_(User.email==request.form.get('email'), User.url_path==request.form.get('url_path'))))
         user = result.scalar()
         if user:
-            print(user)
-            email_temp_password(user)
+            temp_pass = email_temp_password(user)
+            user.password = generate_password_hash(temp_pass, method='pbkdf2:sha256', salt_length=8)
+            db.session.commit()
+            print(temp_pass)
+            print(user.password)
+            flash("Please check your email for a temporary password that you can use to login. For security, please update to a new password in Edit Account.")
+            return redirect(url_for('login'))
         else:
             flash("Email not found")
             return render_template('forgot_password.html', form=form)
@@ -473,8 +484,8 @@ def edit_account(url_path):
     user = result.scalar()
     if current_user.is_authenticated and current_user.url_path == user.url_path:
         if request.method=="POST":
-            current_user.email = request.form.get("email")
-            current_user.url_path = request.form.get("url_path")
+            current_user.email = request.form.get("email").lower().strip()
+            current_user.url_path = request.form.get("url_path").lower().strip()
             db.session.commit()
             if request.form.get("password") != "":
                 current_user.password = generate_password_hash(request.form.get("password"), method='pbkdf2:sha256', salt_length=8)
@@ -545,8 +556,8 @@ def edit_card(url_path):
         
         # POPULATE WITH NEW DATA
         if request.method=="POST":   
-            current_user.theme = edit_card_form.theme.data
-            current_user.colors = edit_card_form.colors.data
+            current_user.theme = request.form.get('theme')
+            current_user.colors = request.form.get('colors')
             current_user.name = request.form.get('name')
             current_user.job_title = request.form.get('job_title')
             current_user.headline_description = request.form.get('headline_description')

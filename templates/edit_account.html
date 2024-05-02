@@ -24,12 +24,12 @@
         <button type="button" id="show-pass-form-button" onclick="showPasswordForm('password_form'); return false;" class="btn btn-warning" style="width: 100%; margin-bottom:1em">Change Password</button>
         
         <div id="password_form" style="display: none;">
-          <div class="form-group"><label class="form-control-label" for="password">Password</label>
-            <input class="form-control" id="password" name="password" type="text">
+          <div class="form-group"><label class="form-control-label" for="password">New Password</label>
+            <input class="form-control" id="password" required type="password" name="password" type="text">
           </div>
     
-          <div class="form-group"><label class="form-control-label" for="confirm">Confirm Password</label>
-            <input class="form-control" id="confirm" name="confirm" type="text">
+          <div class="form-group"><label class="form-control-label" for="confirm">Confirm New Password</label>
+            <input class="form-control" id="confirm" required type="password" name="confirm" type="text">
           </div>
         </div>
         
