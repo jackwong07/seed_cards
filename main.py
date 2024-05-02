@@ -3,11 +3,11 @@ import os
 from flask_bootstrap import Bootstrap4
 from flask_sqlalchemy import SQLAlchemy
 from sqlalchemy.orm import DeclarativeBase, Mapped, mapped_column, relationship
-from sqlalchemy import and_, Integer, String, Float, Boolean, Text, ForeignKey, desc
+from sqlalchemy import and_, or_, Integer, String, Float, Boolean, Text, ForeignKey, desc
 from werkzeug.security import generate_password_hash, check_password_hash
 from werkzeug.utils import secure_filename
 from flask_login import UserMixin, login_user, LoginManager, login_required, current_user, logout_user
-from forms import SignupForm, EditAccountForm, EditCardForm, PaymentForm, LogInForm, EditCardForm, VCard, EditImagesForm
+from forms import SignupForm, EditAccountForm, EditCardForm, PaymentForm, LogInForm, VCard, EditImagesForm, ForgotPasswordForm
 from flask_ckeditor import CKEditor
 from PIL import Image
 import qrcode
@@ -17,9 +17,13 @@ import boto3
 from botocore.client import Config
 import stripe
 import json
+import random
+import string
+import smtplib
 
-
-
+#TODO add to environment variables
+my_email = "jackmail07@gmail.com"
+password= "pmqxxxifsbshkyfr"
 
 #CREATE AND INITIALIZE FLASK APP
 app = Flask(__name__, template_folder='templates')
@@ -159,6 +163,27 @@ def get_vcard(vcard: VCard) -> io.BytesIO:
 
     return file_
 
+# SEND EMAIL FOR FORGOT PASSWORD FLOW, SENDING TEMPORARY PASSWORD
+def email_temp_password(user):
+    with open(f"temp_password.txt", mode='r') as template:
+        content = template.read()
+        content = content.replace("[NAME]", user.name)
+        content = content.replace("[EMAIL]", user.email)
+        content = content.replace("[URL_PATH]", user.url_path)
+        res = ''.join(random.choices(string.ascii_uppercase +
+                             string.digits, k=8))
+        content = content.replace("[TEMPORARY_PASSWORD]", res)
+    
+    with open(f"{user.name}_email.txt", mode='w') as send_email:
+        send_email.write(content)
+        
+    with smtplib.SMTP("smtp.gmail.com") as connection:
+        connection.starttls()
+        connection.login(user=my_email, password=password)
+        connection.sendmail(from_addr=my_email, 
+                            to_addrs= user.email,
+                            msg=f"Seed Cards Temporary Password\n\n{content}")
+
 
 
 
@@ -259,7 +284,12 @@ def payment_success():
 @app.route('/')
 def home():
     session.pop('_flashes', None)
-    return render_template("index.html")
+    # PASS LOGGED_IN FLAG TO SHOW MENU IF USER IS AUTHENTICATED
+    if current_user.is_authenticated:
+        logged_in=True
+    else:
+        logged_in=False
+    return render_template("index.html", logged_in=logged_in, current_user=current_user)
 
 
 @app.route('/register', methods=["GET","POST"])
@@ -308,24 +338,44 @@ def register():
 
 @app.route('/login', methods=["GET","POST"])
 def login():
-    login_form = LogInForm()
+    if current_user.is_authenticated:
+        return redirect(url_for('card'), url_path=current_user.url_path)
+    else:
+        login_form = LogInForm()
+        session.pop('_flashes', None)
+        if request.method=="POST" and login_form.validate_on_submit():
+            form_email = request.form.get('email').lower().strip()
+            form_password = request.form.get('password')
+            result = db.session.execute(db.select(User).where(User.email == form_email))
+            user = result.scalar()
+            if user:
+                if check_password_hash(user.password, form_password):
+                    login_user(user)
+                    flash("Logged in successfully")
+                    return redirect(url_for('card', url_path=current_user.url_path))            
+                else:
+                    flash("Password is incorrect")
+            else:
+                flash("Email not found. Please try again.")
+                return render_template("login.html", login_form=login_form)
+        return render_template("login.html", login_form=login_form)
+
+
+@app.route('/forgot-password', methods=["GET","POST"])
+def forgot_password():
     session.pop('_flashes', None)
-    if request.method=="POST" and login_form.validate_on_submit():
-        form_email = request.form.get('email').lower().strip()
-        form_password = request.form.get('password')
-        result = db.session.execute(db.select(User).where(User.email == form_email))
+    form = ForgotPasswordForm()
+    if request.method=="POST":
+        result = db.session.execute(db.select(User).where(or_(User.email==request.form.get('email'), User.url_path==request.form.get('url_path'))))
         user = result.scalar()
         if user:
-            if check_password_hash(user.password, form_password):
-                login_user(user)
-                flash("Logged in successfully")
-                return redirect(url_for('card', url_path=current_user.url_path))            
-            else:
-                flash("Password is incorrect")
+            print(user)
+            email_temp_password(user)
         else:
             flash("Email not found")
-            return render_template("login.html", login_form=login_form)
-    return render_template("login.html", login_form=login_form)
+            return render_template('forgot_password.html', form=form)
+    return render_template('forgot_password.html', form=form)
+
 
 
 @app.route('/logout', methods=["GET","POST"])
@@ -390,12 +440,12 @@ def card(url_path):
             else:
                 work5_url = None  
                 
-            # PASS CAN_EDIT FLAG TO SHOW MENU IF USER IS AUTHENTICATED
+            # PASS LOGGED_IN FLAG TO SHOW MENU IF USER IS AUTHENTICATED
             if current_user.is_authenticated and current_user.url_path == user.url_path:
-                can_edit=True
+                logged_in=True
             else:
-                can_edit=False
-            return render_template("bus_card.html", user=user, can_edit=can_edit, qr_img=qr_encoded.decode('utf-8'), work1_url=work1_url, work2_url=work2_url, work3_url=work3_url, work4_url=work4_url, work5_url=work5_url, profile_pic=profile_pic)
+                logged_in=False
+            return render_template("bus_card.html", user=user, logged_in=logged_in, qr_img=qr_encoded.decode('utf-8'), work1_url=work1_url, work2_url=work2_url, work3_url=work3_url, work4_url=work4_url, work5_url=work5_url, profile_pic=profile_pic)
     else:
         return render_template("no_user_found.html")
 

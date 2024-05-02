@@ -21,10 +21,16 @@
           </a>
     
           <ul class="nav nav-pills">
-            <li class="nav-item"><a href="#" class="nav-link active" aria-current="page">Home</a></li>
-            <li class="nav-item"><a href="#" class="nav-link">Features</a></li>
-            <li class="nav-item"><a href="#" class="nav-link">Pricing</a></li>
-            <li class="nav-item"><a href="{{ url_for('login')}}" class="nav-link">Login</a></li>
+            <li class="nav-item"><a href="{{url_for('home')}}" class="nav-link active" >Home</a></li>
+            <li class="nav-item"><a href="{{url_for('card', url_path='jack')}}" class="nav-link">Example</a></li>
+            <li class="nav-item"><a href="{{url_for('register')}}" class="nav-link">Sign Up</a></li>
+            {% if logged_in %}
+            <li class="nav-item"><a href="{{ url_for('card', url_path=current_user.url_path)}}" class="nav-link">My Card</a></li>
+            <li class="nav-item"><a href="{{ url_for('logout')}}" class="nav-link">Logout</a></li>
+            {% endif %}
+            {% if not logged_in %}
+            <li class="nav-item"><a href="{{ url_for('login')}}" class="nav-link">Login/My Card</a></li>            
+            {% endif %}
           </ul>
         </header>
       </div>

@@ -1,0 +1,10 @@
+Dear Jacklyn Wong,
+
+You requested a temporary password for your account.
+Email: jackmail07@gmail.com
+URL Path: jack
+Temporary Password: LLM3M44K
+
+MIMEText(u'<a href="http://127.0.0.1:5000/login">Login Here</a>','html')
+
+Seed Cards

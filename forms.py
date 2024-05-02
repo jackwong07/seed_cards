@@ -84,6 +84,10 @@ class EditPasswordForm(FlaskForm):
     confirm  = PasswordField('Repeat New Password')
     submit = SubmitField(label="Update")
 
+class ForgotPasswordForm(FlaskForm):
+    email = StringField(label='Email', validators=[validate_email])
+    url_path = StringField(label="URL path")
+    submit = SubmitField(label="Email Temp Password")
 
 # SEND CONTACT INFO as VCF
 class VCard():
