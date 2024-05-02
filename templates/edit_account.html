@@ -1,16 +1,14 @@
-{% include "header.html" %}
+{% include "header_card.html" %}
 
-    {% extends "base.html" %}
-    {% block title %}Edit Account Details{% endblock %}
+
+    <h1 class="text-center">Edit Account Details</h1>
     <!-- Form add divs to each element to center them -->
     {% from 'bootstrap4/form.html' import render_form %}
 
-    {% block content %}
 
     <div class="container d-flex justify-content-center">
       <main class="form-signin box">
       <form action method="post" class="form" enctype="multipart/form-data" role="form" novalidate>
-        <h1 class="h3 mb-3 fw-normal">Edit Account Details</h1>
 
         <div class="form-group"><label class="form-control-label" for="email">Account Email to log in<br> Note: this is different than displayed email on business card</label>
           <input class="form-control" id="email" name="email" type="text" value={{current_user.email}}>
@@ -48,7 +46,7 @@
 
 
 
-    {% endblock %}
+
     
   
   <script src="https://cdn.jsdelivr.net/npm/bootstrap@5.3.3/dist/js/bootstrap.bundle.min.js" integrity="sha384-YvpcrYf0tY3lHB60NNkmXc5s9fDVZLESaAA55NDzOxhy9GkcIdslK1eN7N6jIeHz" crossorigin="anonymous"></script>

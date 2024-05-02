@@ -15,30 +15,33 @@
     <!-- Header -->
           <nav class="navbar navbar-expand-lg navbar-light bg-light mb-2">
 
-            <a class="navbar-brand" href="{{url_for('home')}}"><img src="/static/other_icons/bug.svg" width="25" height="25"/> Seed Cards</a>
+            <span class="navbar-brand"></span>
             <button class="navbar-toggler" type="button" data-bs-toggle="collapse" data-bs-target="#navbarSupportedContent" aria-controls="navbarSupportedContent" aria-expanded="false" aria-label="Toggle navigation">
               <span class="navbar-toggler-icon"></span>
             </button>
           
             <div class="collapse navbar-collapse" id="navbarSupportedContent">
               <ul class="navbar-nav mr-auto">
-                <li class="nav-item active">
-                  <a class="nav-link" href="{{url_for('home')}}">Home</a>
-                </li>
 
                   {% if logged_in %}
                   <li class="nav-item">
                     <a class="nav-link" href="{{url_for('card', url_path=current_user.url_path)}}">My Card</a>
                   </li>
                   <li class="nav-item">
-                    <a class="nav-link" href="{{url_for('logout')}}">Logout</a>
+                    <a class="nav-link" href="{{ url_for('edit_card', url_path=current_user.url_path)}}">Edit Card</a>
+                  </li>
+                  <li class="nav-item">
+                    <a class="nav-link" href="{{ url_for('edit_images', url_path=current_user.url_path)}}">Edit Images</a>
+                  </li>
+                  <li class="nav-item">
+                    <a class="nav-link" href="{{ url_for('edit_account', url_path=current_user.url_path)}}">Edit Account</a>
+                  </li>
+                  <li class="nav-item">
+                    <a class="nav-link" href="{{ url_for('logout')}}">Logout</a>
                   </li>
                   {% endif %}
 
                   {% if not logged_in %}
-                  <li class="nav-item">
-                    <a class="nav-link" href="{{url_for('card', url_path='example-card')}}">Example</a>
-                  </li>
                   <li class="nav-item">
                     <a class="nav-link" href="{{url_for('register')}}">Sign Up</a>
                   </li>

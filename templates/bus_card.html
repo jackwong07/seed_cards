@@ -13,28 +13,7 @@
 <div class = "container-fluid col-12 col-sm-8 col-lg-6 justify-content-between">
 
 <!-- Authenticated Menu -->
-{% if logged_in: %}
-<div class="container">
-  <div class="d-flex flex-wrap justify-content-left mb-2 border-bottom">
-    <ul class="nav">
-      <li class="nav-item"><a href="{{ url_for('edit_card', url_path=current_user.url_path)}}" class="nav-link magazine_temp">Edit Card</a></li>
-      <li class="nav-item"><a href="{{ url_for('edit_images', url_path=current_user.url_path)}}" class="nav-link magazine_temp">Edit Images</a></li>      
-      <li class="nav-item"><a href="{{ url_for('edit_account', url_path=current_user.url_path)}}" class="nav-link magazine_temp">Edit Account</a></li>
-      <li class="nav-item"><a href="{{ url_for('logout')}}" class="nav-link magazine_temp">Logout</a></li>    
-    </ul>
-  </div>
-</div>
-{% endif %}
-
-{% if not logged_in: %}
-<div class="container">
-  <div class="d-flex flex-wrap justify-content-left mb-2 border-bottom">
-    <ul class="nav">
-      <li class="nav-item"><a href="{{ url_for('login')}}" class="nav-link magazine_temp">Login</a></li>
-    </ul>
-  </div>
-</div>
-{% endif %}
+{% include "header_card.html" %}
 
 
 {% with messages = get_flashed_messages() %}
@@ -186,16 +165,4 @@
   </div>
 
   
-<hr>
-   <div class="container link-back align-items-right" >
-   <p style="color:black">Digital Business Card made by 
-    <a  href="{{url_for('home')}}">DigiBusi</a>
-   </p>
-   </div>
-
-  </div>
-
-  <script src="https://cdn.jsdelivr.net/npm/bootstrap@5.3.3/dist/js/bootstrap.bundle.min.js" integrity="sha384-YvpcrYf0tY3lHB60NNkmXc5s9fDVZLESaAA55NDzOxhy9GkcIdslK1eN7N6jIeHz" crossorigin="anonymous"></script>
-
-</body>
-</html>
+  {% include "footer_card.html" %}

@@ -16,8 +16,9 @@
             <img src="./static/images/magazine_temp_example.png" class="d-block mx-lg-auto img-fluid" alt="Digital Business Card Example" width="200" height="200" loading="lazy">
           </div>
           <div class="col-lg-6">
-            <h1 class="display-5 fw-bold text-body-emphasis lh-1 mb-3">Digital Business Card</h1>
-            <p class="lead">Create a digital business card, share a QR code, add to you email signature, make a phone shortcut without downloading another app. Pricing starts at $1. Analytics is an additional $2. Custom domain adds another $2.</p>
+            <h1 class="display-5 fw-bold text-body-emphasis lh-1 mb-3">Welcome to Seed</h1>
+            <p class="lead">Create a digital business card with Seed in minutes, where you can quickly share your contact details and professional works.
+               Seed cards only cost $1 per month, cancel at any time.</p>
             <div class="d-grid gap-2 d-md-flex justify-content-md-start">
               <a class="btn btn-primary btn-lg px-4 me-md-2" href="{{url_for('register')}}" role="button">Create Card</a>
             </div>
@@ -45,9 +46,10 @@
               <form class="card-body tab-content">
                   <div class="tab-pane active" id="iphone">
                     <p class=" card-text">
-                      Nobody wants to download another app. Access your card anywhere through a browser and create a shortcut on your phone home screen.
+                      Nobody wants to download another app. 
+                      For quick access to your card, use a browser shortcut from your phone home screen.
                     </p>
-                    <ul class="text-start" style="margin: 1em">
+                    <ul class="text-start" style="margin: 0em">
                       <li>Open Google Chrome on your iPhone</li>
                       <li>Go to your card's URL</li>
                       <li>Tap the share button in the address bar of the browser on the top right corner</li>
@@ -55,7 +57,7 @@
                       <li>Edit the name of the site and the URL if necessary</li>
                       <li>Tap the Add button at the top</li>
                     </ul>
-                    <img src="/static/images/iphone_shortcut_instructions.png" style="max-width: 100%"></img>
+                    <img src="/static/images/iphone_shortcut_instructions.png" style="margin-top: 1em; max-width: 100%"></img>
                     
                   </div>
                   <div class="tab-pane" id="android">
@@ -70,7 +72,7 @@
                         <li>Edit the name for the shortcut</li>
                         <li>Tap the Add button</li>
                       </ul>
-                      <img src="/static/images/iphone_shortcut_instructions.png" style="max-width: 100%"></img>
+                      <img src="/static/images/iphone_shortcut_instructions.png" style="margin-top: 1em; max-width: 100%"></img>
                      
                   </div>
               </form>
@@ -81,5 +83,6 @@
 
 
   <script src="https://cdn.jsdelivr.net/npm/bootstrap@5.3.3/dist/js/bootstrap.bundle.min.js" integrity="sha384-YvpcrYf0tY3lHB60NNkmXc5s9fDVZLESaAA55NDzOxhy9GkcIdslK1eN7N6jIeHz" crossorigin="anonymous"></script>
+
 </body>
 </html>

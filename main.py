@@ -111,6 +111,13 @@ login_manager.init_app(app)
 def load_user(user_id):
     return db.get_or_404(User, user_id)
 
+# LOGGED IN STATUS
+def logged_in_status(current_user):
+    if current_user.is_authenticated:
+        logged_in=True
+    else:
+        logged_in=False
+    return logged_in
 
 # AWS S3 Bucket Initialization and Connection and save
 aws_access_key_id = "AKIA6GBMF7OV5N6SKCW2"
@@ -287,10 +294,7 @@ def payment_success():
 def home():
     session.pop('_flashes', None)
     # PASS LOGGED_IN FLAG TO SHOW MENU IF USER IS AUTHENTICATED
-    if current_user.is_authenticated:
-        logged_in=True
-    else:
-        logged_in=False
+    logged_in = logged_in_status(current_user)
     return render_template("index.html", logged_in=logged_in, current_user=current_user)
 
 
@@ -333,10 +337,7 @@ def register():
             login_user(new_user)
 
             return redirect(url_for('payment'))
-    if current_user.is_authenticated:
-        logged_in=True
-    else:
-        logged_in=False
+    logged_in = logged_in_status(current_user)
     return render_template("register.html", signup_form=signup_form, logged_in=logged_in)
 
 
@@ -452,10 +453,7 @@ def card(url_path):
                 work5_url = None  
                 
             # PASS LOGGED_IN FLAG TO SHOW MENU IF USER IS AUTHENTICATED
-            if current_user.is_authenticated and current_user.url_path == user.url_path:
-                logged_in=True
-            else:
-                logged_in=False
+            logged_in = logged_in_status(current_user)
             return render_template("bus_card.html", user=user, logged_in=logged_in, qr_img=qr_encoded.decode('utf-8'), work1_url=work1_url, work2_url=work2_url, work3_url=work3_url, work4_url=work4_url, work5_url=work5_url, profile_pic=profile_pic)
     else:
         return render_template("no_user_found.html")
@@ -482,6 +480,7 @@ def generate_vcf(url_path):
 def edit_account(url_path):
     result = db.session.execute(db.select(User).where(User.url_path==url_path))
     user = result.scalar()
+    logged_in = logged_in_status(current_user)
     if current_user.is_authenticated and current_user.url_path == user.url_path:
         if request.method=="POST":
             current_user.email = request.form.get("email").lower().strip()
@@ -491,7 +490,7 @@ def edit_account(url_path):
                 current_user.password = generate_password_hash(request.form.get("password"), method='pbkdf2:sha256', salt_length=8)
                 db.session.commit()
             return redirect(url_for('card', url_path=current_user.url_path))   
-        return render_template("edit_account.html", user=current_user)
+        return render_template("edit_account.html", user=current_user, logged_in=logged_in)
 
 
 @app.route('/card/cancel-account/<url_path>', methods=["GET","POST"])
@@ -525,6 +524,7 @@ def cancel_account(url_path):
 def edit_card(url_path):
     result = db.session.execute(db.select(User).where(User.url_path==url_path))
     user = result.scalar()
+    logged_in = logged_in_status(current_user)
     edit_card_form = EditCardForm() 
     # SHOW EXISTING DATA
     if current_user.is_authenticated and current_user.url_path == user.url_path:
@@ -579,13 +579,14 @@ def edit_card(url_path):
             current_user.body = request.form.get('body')
             db.session.commit()
             return redirect(url_for('card', url_path=current_user.url_path))   
-        return render_template("edit_card.html", user=current_user, edit_card_form=edit_card_form)
+        return render_template("edit_card.html", user=current_user, logged_in=logged_in, edit_card_form=edit_card_form)
 
 @app.route('/card/edit-images/<url_path>', methods=["GET","POST"])
 @login_required
 def edit_images(url_path):
     result = db.session.execute(db.select(User).where(User.url_path==url_path))
     user = result.scalar()
+    logged_in = logged_in_status(current_user)
     # SHOW EXISTING DATA
     if current_user.is_authenticated and current_user.url_path == user.url_path:
         # SHOW EXISTING PROFILE PIC AND WORKS
@@ -663,7 +664,7 @@ def edit_images(url_path):
             
             db.session.commit()
             return redirect(url_for('card', url_path=current_user.url_path))  
-    return render_template("edit_images.html", user=current_user,  profile_pic_url=profile_pic_url, work1_url=work1_url, work2_url=work2_url,  work3_url=work3_url,  work4_url=work4_url, work5_url=work5_url)  
+    return render_template("edit_images.html", user=current_user, logged_in=logged_in, profile_pic_url=profile_pic_url, work1_url=work1_url, work2_url=work2_url,  work3_url=work3_url,  work4_url=work4_url, work5_url=work5_url)  
 
 if __name__ == "__main__":
     app.run(debug=True)
