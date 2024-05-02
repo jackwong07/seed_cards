@@ -312,6 +312,7 @@ def payment_success():
     #TODO: link to /card and pass current user    
     current_user.payment=True
     db.session.commit()
+    email_registraion_success(current_user)
     flash(message="Payment Successful! Click Edit Card and Edit Images to customize your digital business card.")
     return redirect(url_for('card', url_path=current_user.url_path))
 

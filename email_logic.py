@@ -35,3 +35,28 @@ def email_temp_password(user):
         print("Error: %s - %s." % (e.filename, e.strerror))
     
     return temp_pass
+
+
+# SEND EMAIL FOR REGISTRATION
+def email_registraion_success(user):
+    with open(f"emails/registration_success.txt", mode='r') as template:
+        content = template.read()
+        content = content.replace("[NAME]", user.name)
+        content = content.replace("[EMAIL]", user.email)
+        content = content.replace("[URL_PATH]", user.url_path)
+    
+    with open(f"{user.name}_registration_email.txt", mode='w') as send_email:
+        send_email.write(content)
+        
+    with smtplib.SMTP("smtp.gmail.com") as connection:
+        connection.starttls()
+        connection.login(user=my_email, password=password)
+        connection.sendmail(from_addr=my_email, 
+                            to_addrs= user.email,
+                            msg=f"Seed Cards Registration Complete\n\n{content}")
+        
+    try:
+        os.remove(f"{user.name}_registration_email.txt")
+    except OSError as e:
+        # If it fails, inform the user.
+        print("Error: %s - %s." % (e.filename, e.strerror))

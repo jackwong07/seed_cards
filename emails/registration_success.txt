@@ -1,0 +1,11 @@
+Dear [NAME],
+
+Thank you for creating a Seed Card! Below are your account details.
+Email: [EMAIL]
+URL Path: [URL_PATH]
+Link to your Seed Card: http://127.0.0.1:5000/card/[URL_PATH]
+
+When you are logged in on your card page, you can click on the menu to edit your card details and add images.
+
+Thank you!
+Seed Cards
