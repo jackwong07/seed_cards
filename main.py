@@ -301,12 +301,14 @@ def stripe_webhook():
         cancelled_customer_id = event['data']['object']['customer']
         # cancelled_subscription_id = event['data']['object']['id']
         # cancelled_payment_status = event['data']['object']['status']        
+        # DELETE FROM DATABASE AFTER STRIPE SENDS SUBSCRIPTION DELETED
         result = db.session.execute(db.select(User).where(and_(User.stripe_customer_id==cancelled_customer_id, User.payment==True)))
         user = result.scalar()
-        # user.stripe_payment_status= cancelled_payment_status
-        # user.payment=False
         db.session.delete(user)
         db.session.commit()
+        
+        # REMOVE S3 IMAGES
+        
         print("Listened for account subscription deleted")
     else:
         # Unexpected event type
@@ -477,30 +479,12 @@ def edit_account(url_path):
         return render_template("edit_account.html", user=current_user, logged_in=logged_in)
 
 
-@app.route('/card/cancel-account/<url_path>', methods=["GET","POST"])
+@app.route('/card/cancel-account')
 @login_required
-def cancel_account(url_path):
-    result = db.session.execute(db.select(User).where(User.url_path==url_path))
-    user = result.scalar()
-    
-    # TODO DELETE S3 FILES
-    if user.profile_pic:
-        my_object = s3.Object(Bucket=BUCKET_NAME, Key=f"{url_path}_{user.profile_pic}")
-        response = my_object.delete()
-    
-    if user.work1:
-        s3.delete_object(Bucket=BUCKET_NAME, Key=f"{url_path}_{user.work1}")
-    #s3.generate_presigned_url("get_object", Params={"Bucket": BUCKET_NAME, "Key": f"{url_path}_{s3_work3_name}"}, ExpiresIn=30)
-
-
-    # TODO DELETE USER FROM DATABASE, without getting 404 error after or set payment to false and payment status 
-    stripe.Subscription.modify(
-        user.stripe_subscription_id,
-        cancel_at_period_end=True,
-        )
-
+def cancel_account():
+    email_cancellation_success(current_user)
     flash("Account cancelled. You will have access until the end of you bill month. Thank you for your support.")
-    return redirect(url_for('home'))
+    return redirect(url_for('card', url_path=current_user.url_path))
 
 
 @app.route('/card/edit-card/<url_path>', methods=["GET","POST"])
