@@ -399,25 +399,25 @@ def logout():
 # BUSINESS CARD PAGE
 @app.route('/card/<url_path>', methods=["GET","POST"])
 def card(url_path):
-    print(f"top of card {url_path}")
     result = db.session.execute(db.select(User).where(User.url_path==url_path))
     user = result.scalar()
-    print(f"top of card {user}")
+    # GENERATE QR CODE
+    qr = qrcode.QRCode(version=3, box_size=5, border=5, error_correction=qrcode.constants.ERROR_CORRECT_H)
+    # TODO change link after deploying
+    qr_link = f"http://127.0.0.1:5000/card/{url_path}"
+    qr.add_data(qr_link)
+    qr.make(fit=True)
+    qr_img = qr.make_image(fill_color="black", back_color="white")
+
+    buffer = io.BytesIO()
+    buffer.seek(0)
+    buffer.truncate(0)
+    qr_img.save(buffer, format="png")
+    qr_encoded = base64.b64encode(buffer.getvalue())
+    
     if user:
         if user.payment==True:
-            # GENERATE QR CODE
-            print(f"inside if {user.payment}")
-            qr = qrcode.QRCode(version=3, box_size=5, border=5, error_correction=qrcode.constants.ERROR_CORRECT_H)
-            qr_link = f"http://127.0.0.1:5000/card/{url_path}"
-            qr.add_data(qr_link)
-            qr.make(fit=True)
-            qr_img = qr.make_image(fill_color="black", back_color="white")
-
-            buffer = io.BytesIO()
-            buffer.seek(0)
-            buffer.truncate(0)
-            qr_img.save(buffer, format="png")
-            qr_encoded = base64.b64encode(buffer.getvalue())
+           
             
             # GRAB IMAGES FROM S3
             # PROFILE PIC
@@ -461,9 +461,9 @@ def card(url_path):
             logged_in = logged_in_status(current_user)
             return render_template("bus_card.html", user=user, logged_in=logged_in, qr_img=qr_encoded.decode('utf-8'), work1_url=work1_url, work2_url=work2_url, work3_url=work3_url, work4_url=work4_url, work5_url=work5_url, profile_pic_url=profile_pic_url, logo_url=logo_url)
         else:
-            return render_template("no_user_found.html")
+            return render_template("no_user_found.html", qr_img=qr_encoded.decode('utf-8'))
     else:
-        return render_template("no_user_found.html")
+        return render_template("no_user_found.html", qr_img=qr_encoded.decode('utf-8'))
 
 
 @app.route("/vcard/download/<url_path>")
