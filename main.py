@@ -291,7 +291,7 @@ def stripe_webhook():
         # cancelled_subscription_id = event['data']['object']['id']
         # cancelled_payment_status = event['data']['object']['status']        
         # DELETE FROM DATABASE AFTER STRIPE SENDS SUBSCRIPTION DELETED
-        result = db.session.execute(db.select(User).where(and_(User.stripe_customer_id==cancelled_customer_id, User.payment==True)))
+        result = db.session.execute(db.select(User).where(and_(User.stripe_customer_id==cancelled_customer_id)))
         user = result.scalar()
         db.session.delete(user)
         db.session.commit()
@@ -321,6 +321,7 @@ def payment_success():
     print(request.args.get('session_id'))
     result = db.session.execute(db.select(User).where(User.stripe_session_id == session["stripe_session_id"]))
     user = result.scalar()
+    print(user)
     # CREATE NEW USER
     user.email = session["new_user_email"]
     user.password = session["new_user_hashed_password"]
@@ -497,8 +498,6 @@ def edit_account(url_path):
 @login_required
 def cancel_account():
     email_cancellation_success(current_user)
-    db.session.delete(current_user)
-    db.session.commit()
     flash("Account cancelled. You will have access until the end of you bill month. Thank you for your support.")
     return redirect(url_for('card', url_path=current_user.url_path))
 
