@@ -422,9 +422,14 @@ def card(url_path):
             # GRAB IMAGES FROM S3
             # PROFILE PIC
             if user.profile_pic and user.profile_pic!="":
-                profile_pic = s3.generate_presigned_url("get_object", Params={"Bucket": BUCKET_NAME, "Key": f"{url_path}_{user.profile_pic}"}, ExpiresIn=30)
+                profile_pic_url = s3.generate_presigned_url("get_object", Params={"Bucket": BUCKET_NAME, "Key": f"{url_path}_{user.profile_pic}"}, ExpiresIn=30)
             else:
-                profile_pic = None
+                profile_pic_url = None
+                
+            if user.logo and user.logo!="":
+                logo_url = s3.generate_presigned_url("get_object", Params={"Bucket": BUCKET_NAME, "Key": f"{url_path}_{user.logo}"}, ExpiresIn=30)
+            else:
+                logo_url = None
             
             # # WORKS
             if user.work1 and user.work1!="":
@@ -454,7 +459,7 @@ def card(url_path):
                 
             # PASS LOGGED_IN FLAG TO SHOW MENU IF USER IS AUTHENTICATED
             logged_in = logged_in_status(current_user)
-            return render_template("bus_card.html", user=user, logged_in=logged_in, qr_img=qr_encoded.decode('utf-8'), work1_url=work1_url, work2_url=work2_url, work3_url=work3_url, work4_url=work4_url, work5_url=work5_url, profile_pic=profile_pic)
+            return render_template("bus_card.html", user=user, logged_in=logged_in, qr_img=qr_encoded.decode('utf-8'), work1_url=work1_url, work2_url=work2_url, work3_url=work3_url, work4_url=work4_url, work5_url=work5_url, profile_pic_url=profile_pic_url, logo_url=logo_url)
         else:
             return render_template("no_user_found.html")
     else:
@@ -577,6 +582,11 @@ def edit_images(url_path):
             profile_pic_url = s3.generate_presigned_url("get_object", Params={"Bucket": BUCKET_NAME, "Key": f"{url_path}_{current_user.profile_pic}"}, ExpiresIn=30)            
         else:
             profile_pic_url=None
+            
+        if current_user.logo:
+            logo_url = s3.generate_presigned_url("get_object", Params={"Bucket": BUCKET_NAME, "Key": f"{url_path}_{current_user.logo}"}, ExpiresIn=30)            
+        else:
+            logo_url=None
                     
         if current_user.work1:
             work1_url = s3.generate_presigned_url("get_object", Params={"Bucket": BUCKET_NAME, "Key": f"{url_path}_{current_user.work1}"}, ExpiresIn=30)    
@@ -613,6 +623,13 @@ def edit_images(url_path):
                 save_to_s3(profile_pic, url_path, s3_profile_pic)     
                 current_user.profile_pic = secure_filename(profile_pic.filename)
             
+            # LOGO
+            if request.files["logo"]:
+                logo = request.files["logo"]
+                s3_logo = secure_filename(logo.filename)
+                save_to_s3(logo, url_path, s3_logo)     
+                current_user.logo = secure_filename(logo.filename)
+            
             #WORKS
             if request.files["work1"]:
                 work1 = request.files["work1"]
@@ -647,7 +664,7 @@ def edit_images(url_path):
             
             db.session.commit()
             return redirect(url_for('card', url_path=current_user.url_path))  
-    return render_template("edit_images.html", user=current_user, logged_in=logged_in, profile_pic_url=profile_pic_url, work1_url=work1_url, work2_url=work2_url,  work3_url=work3_url,  work4_url=work4_url, work5_url=work5_url)  
+    return render_template("edit_images.html", user=current_user, logged_in=logged_in, profile_pic_url=profile_pic_url, work1_url=work1_url, work2_url=work2_url,  work3_url=work3_url,  work4_url=work4_url, work5_url=work5_url, logo_url=logo_url)  
 
 if __name__ == "__main__":
     app.run(debug=True)

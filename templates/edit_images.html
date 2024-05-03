@@ -1,4 +1,5 @@
 {% include "header_card.html" %}
+{% include "menu_card.html" %}
 
 
     <h1 class="text-center">Edit Images</h1>
@@ -10,8 +11,10 @@
 
         <div class="container d-flex justify-content-center">
           <main class="form-signin box">
-          <form action method="post" class="form" enctype="multipart/form-data" role="form" novalidate>
+            <a href="javascript:history.back()">Back to My Card</a>
 
+          <form action method="post" class="form" enctype="multipart/form-data" role="form" novalidate>
+<br/>
         
             <div>
         {% if user.profile_pic %}
@@ -23,9 +26,25 @@
           </div>
         {%endif%}
         <div class="form-group"><label class="form-control-label" for="profile">Update Profile Picture</label>
-          <input class="form-control-file" id="profile" name="profile" type="file" value={{current_user.provided_profile_pic}}>
+          <input class="form-control-file" id="profile" name="profile" type="file" value={{current_user.profile_pic}}>
         </div>
       </div>
+
+
+      <div>
+        {% if user.logo %}
+          <div class="card" style="width: 12rem;">
+          <img src="{{logo_url}}" class="card-img-top" alt="{{user.logo}}">
+          <div class="card-body">
+          <p class="card-text">{{user.logo}}</p>
+          </div>
+          </div>
+        {%endif%}
+        <div class="form-group"><label class="form-control-label" for="logo">Update Logo</label>
+          <input class="form-control-file" id="logo" name="logo" type="file" value={{current_user.logo}}>
+        </div>
+      </div>
+
 
 
       <div>

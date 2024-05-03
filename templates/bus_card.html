@@ -16,11 +16,11 @@
 
 
 <!-- Profile Image-->
-{%if profile_pic %}
-<div class="hero" style="position: relative; background-image: url('{{profile_pic}}')">
+{%if profile_pic_url %}
+<div class="hero" style="position: relative; background-image: url('{{profile_pic_url}}')">
 {%endif %}
 
-{%if not profile_pic %}
+{%if not profile_pic_url %}
 <div class="hero" style="position: relative;">
 {%endif %}
 
@@ -41,13 +41,20 @@
 <br>
   <div class="row d-flex justify-content-left">
     <div class="text-left">
-      {% if user.company %}
-        <p style="font-size: 14pt">{{user.company}} |
+
+
+        <p style="font-size: 14pt">
+          {%if logo_url %}
+          <img id="logo-img" src= '{{logo_url}}'></img>
+          {%endif %}
+          {% if user.company %}
+           {{user.company}} |
         {% endif %}
       {% if user.location %}
-        {{ user.location}}</p>
+        {{ user.location}}
         {% endif %}
-      
+
+      </p>
 
         <p class="card-text text-start"><small>{{user.headline_description| safe}}</small></p>
       <a href="{{user.website_link}}" class="card-link" style="font-size: 14pt">{{user.website_link}}</a>

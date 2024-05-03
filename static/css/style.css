@@ -56,6 +56,10 @@ body.magazine_temp {
   min-height: 100vh;
 }
 
+#logo-img{
+    width: 30px;
+}
+
 .nav-link.magazine_temp{
   color: rgb(51,102,204);
 }

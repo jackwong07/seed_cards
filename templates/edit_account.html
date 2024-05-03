@@ -1,17 +1,24 @@
 {% include "header_card.html" %}
-
+{% include "menu_card.html" %}
 
     <h1 class="text-center">Edit Account Details</h1>
     <!-- Form add divs to each element to center them -->
     {% from 'bootstrap4/form.html' import render_form %}
 
 
-    <div class="container d-flex justify-content-center">
-      <main class="form-signin box">
-      <form action method="post" class="form" enctype="multipart/form-data" role="form" novalidate>
 
-        <div class="form-group"><label class="form-control-label" for="email">Account Email to log in<br> Note: this is different than displayed email on business card</label>
+    <div class="container d-flex justify-content-center">
+
+
+      <main class="form-signin box">
+          
+        <a href="javascript:history.back()">Back to My Card</a>
+
+      <form action method="post" class="form" enctype="multipart/form-data" role="form" novalidate>
+        <br/>
+        <div class="form-group"><label class="form-control-label" for="email">Account Email to log in</label>
           <input class="form-control" id="email" name="email" type="text" value={{current_user.email}}>
+          <small class="form-text text-muted">This can be different from the displayed email on your business card.</small>
         </div>
         
         <button type="button" id="show-pass-form-button" onclick="showPasswordForm('password_form'); return false;" class="btn btn-warning" style="width: 100%; margin-bottom:1em">Change Password</button>
@@ -29,6 +36,8 @@
         <div class="form-group">
         <input class="btn btn-primary btn-md" id="submit" name="submit" type="submit" value="Update">
       </div>
+
+
 
 
       <hr/>
