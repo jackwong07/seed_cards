@@ -74,7 +74,6 @@ class EditImagesForm(FlaskForm):
 
 class EditAccountForm(FlaskForm):
     email = StringField(label='Account Email to log in', validators=[validate_email])
-    url_path = StringField(label="Unique URL path", validators=[DataRequired()])
     password = PasswordField(label='Password', validators=[DataRequired(), EqualTo('confirm', message='Passwords must match')])
     confirm  = PasswordField('Repeat Password')
     submit = SubmitField(label="Update")

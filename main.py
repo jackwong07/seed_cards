@@ -115,6 +115,7 @@ def logged_in_status(current_user):
     return logged_in
 
 # AWS S3 Bucket Initialization and Connection and save
+#TODO: set as environment variable 
 aws_access_key_id = "AKIA6GBMF7OV5N6SKCW2"
 aws_secret_access_key = "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"
 BUCKET_NAME = "digibusiness-card-bucket"
@@ -127,11 +128,21 @@ s3 = boto3.client('s3',
     endpoint_url='https://s3.us-east-2.amazonaws.com',
 )
 
+s3_resource = boto3.resource('s3',
+    aws_access_key_id=aws_access_key_id,
+    aws_secret_access_key=aws_secret_access_key,
+    config=Config(signature_version='s3v4'),
+    region_name='us-east-2',
+    endpoint_url='https://s3.us-east-2.amazonaws.com',
+    )
+
 def save_to_s3(image, url_path, s3_name):
     img = Image.open(image)
     width, height= img.size
     if width>600:
         img.thumbnail((600,1080))
+    if img.mode != "RGB":
+        img = img.convert('RGB')
     buffer=io.BytesIO()
     img.save(buffer, format="JPEG")
     buffer.seek(0)
@@ -142,6 +153,7 @@ def save_to_s3(image, url_path, s3_name):
 
 
 # STRIPE SETUP
+#TODO: set as environment variable 
 stripe_keys = {
     "secret_key": "sk_test_51PB3m7FCnvuCuyrQiLhgCTOkCY1faz4U2hcxzJyzVDsBC669XuJg69nnvbNfFHnhe6KTXXbOdyyYrJxBZzx4173G00fcC9O1VM",
     "publishable_key": "pk_test_51PB3m7FCnvuCuyrQElzMQQT6F4nSdp94KTv773qyrcJlyVsG5nB7U4nUNM1N7FJEObJkgSLBMZQC5s5MFrCojOQb00pAkpEXhb",
@@ -273,7 +285,7 @@ def stripe_webhook():
             db.session.add(new_user)
             db.session.commit() 
         else:
-            print("Checkout complete, not paid")
+            return "Error with payment"
     if event['type']=="customer.subscription.deleted":
         cancelled_customer_id = event['data']['object']['customer']
         # cancelled_subscription_id = event['data']['object']['id']
@@ -285,7 +297,17 @@ def stripe_webhook():
         db.session.commit()
         
         # REMOVE S3 IMAGES
-        
+        bucket = s3_resource.Bucket(BUCKET_NAME)
+        aws_files = [item.key for item in bucket.objects.all()]
+        files_to_delete = [aws_file for aws_file in aws_files if aws_file.startswith(f"{user.url_path}_")]
+        print(f"Files: {len(aws_files)}")
+        print(f"Files to Delete: {len(files_to_delete)}")
+        print(f"{files_to_delete[0]}")
+        counter = 0
+        for file_to_delete in files_to_delete:
+            counter = counter+1
+            print(f"Deleting file {file_to_delete} - {counter} of {len(files_to_delete)}")
+            s3.delete_object(Bucket=BUCKET_NAME, Key=file_to_delete)
         print("Listened for account subscription deleted")
     else:
         # Unexpected event type
@@ -463,7 +485,6 @@ def edit_account(url_path):
     if current_user.is_authenticated and current_user.url_path == user.url_path:
         if request.method=="POST":
             current_user.email = request.form.get("email").lower().strip()
-            current_user.url_path = request.form.get("url_path").lower().strip()
             db.session.commit()
             if request.form.get("password") != "":
                 current_user.password = generate_password_hash(request.form.get("password"), method='pbkdf2:sha256', salt_length=8)
@@ -476,6 +497,8 @@ def edit_account(url_path):
 @login_required
 def cancel_account():
     email_cancellation_success(current_user)
+    db.session.delete(current_user)
+    db.session.commit()
     flash("Account cancelled. You will have access until the end of you bill month. Thank you for your support.")
     return redirect(url_for('card', url_path=current_user.url_path))
 

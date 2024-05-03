@@ -13,11 +13,6 @@
         <div class="form-group"><label class="form-control-label" for="email">Account Email to log in<br> Note: this is different than displayed email on business card</label>
           <input class="form-control" id="email" name="email" type="text" value={{current_user.email}}>
         </div>
-
-        <div class="form-group"><label class="form-control-label" for="url_path">Unique URL Path</label>
-          <input class="form-control" id="url_path" name="url_path" type="text" value={{current_user.url_path}}>
-        </div>
-
         
         <button type="button" id="show-pass-form-button" onclick="showPasswordForm('password_form'); return false;" class="btn btn-warning" style="width: 100%; margin-bottom:1em">Change Password</button>
         
