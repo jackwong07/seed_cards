@@ -23,7 +23,6 @@ class SignupForm(FlaskForm):
     url_path = StringField(label="Unique URL path", validators=[DataRequired()])
     name = StringField(label='Name', validators=[DataRequired()])
     job_title = StringField(label='Job Title', validators=[DataRequired()])
-    picture = FileField(label='Profile Picture (optional)')
     submit = SubmitField(label="Submit")
 
 #USE STRIPE

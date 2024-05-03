@@ -49,12 +49,12 @@ ckeditor = CKEditor(app)
 class User(db.Model, UserMixin):
     __tablename__ = "user_table"
     id: Mapped[int] = mapped_column(Integer, primary_key=True, unique=True, autoincrement=True)
-    url_path: Mapped[str] = mapped_column(String(250), unique=True)
-    email: Mapped[str] = mapped_column(String(250), unique=True, nullable=False)
-    password: Mapped[str] = mapped_column(String(250), nullable=False)
+    url_path: Mapped[str] = mapped_column(String(250), unique=True, nullable=True)
+    email: Mapped[str] = mapped_column(String(250), unique=True, nullable=True)
+    password: Mapped[str] = mapped_column(String(250), nullable=True)
     theme: Mapped[str] = mapped_column(String(250), nullable=True)
     colors: Mapped[str] = mapped_column(String(250), nullable=True)    
-    name: Mapped[str] = mapped_column(String(250), nullable=False)
+    name: Mapped[str] = mapped_column(String(250), nullable=True)
     job_title: Mapped[str] = mapped_column(String(250), nullable=True)
     profile_pic: Mapped[str] = mapped_column(String(250), nullable=True)
     headline_description: Mapped[str] = mapped_column(Text, nullable=True)
@@ -82,10 +82,9 @@ class User(db.Model, UserMixin):
     body: Mapped[str] = mapped_column(Text, nullable=True)    
     payment: Mapped[bool] = mapped_column(Boolean, nullable=True)
     stripe_session_id: Mapped[str] = mapped_column(String(250), nullable=True, unique=True)
-    #TODO make customer id and subscription id not unique
-    stripe_customer_id: Mapped[str] = mapped_column(String(250), nullable=True, unique=True)
-    stripe_subscription_id: Mapped[str] = mapped_column(String(250), nullable=True, unique=True)
-    stripe_payment_status: Mapped[str] = mapped_column(String(250), nullable=True, unique=True)
+    stripe_customer_id: Mapped[str] = mapped_column(String(250), nullable=True)
+    stripe_subscription_id: Mapped[str] = mapped_column(String(250), nullable=True)
+    stripe_payment_status: Mapped[str] = mapped_column(String(250), nullable=True)
 
     def __repr__(self):
         return f"<User {self.name}>"
@@ -186,11 +185,11 @@ def home():
 def register():
     signup_form = SignupForm()
     if request.method=="POST" and signup_form.validate_on_submit():
-        form_email = request.form['email'].lower().strip()
-        form_url_path = request.form["url_path"].lower().strip()
-        email_result = db.session.execute(db.select(User).where(User.email==form_email))
+        session["new_user_email"] = request.form['email'].lower().strip()
+        session["new_user_url_path"] = request.form["url_path"].lower().strip()
+        email_result = db.session.execute(db.select(User).where(User.email==session["new_user_email"]))
         email_user = email_result.scalar()
-        url_result = db.session.execute(db.select(User).where(User.url_path==form_url_path))
+        url_result = db.session.execute(db.select(User).where(User.url_path==session["new_user_url_path"]))
         url_user = url_result.scalar()
         if email_user:
             #if email already exists
@@ -201,32 +200,10 @@ def register():
             flash("This URL Path is already taken")
             return redirect(url_for('register'))
         else:
-            new_user = User(
-                email = request.form["email"].lower().strip(),
-                password = generate_password_hash(request.form.get('password'), method='pbkdf2:sha256', salt_length=8),
-                url_path = request.form["url_path"].lower().strip(),
-                name = request.form["name"],
-                job_title = request.form["job_title"],
-                profile_pic = secure_filename(signup_form.picture.data.filename),
-                payment=False,
-                theme="magazine",
-                colors="light",
-                headline_description="Lorem ipsum dolor sit amet, consectetur adipiscing elit, sed do eiusmod tempor incididunt ut labore et dolore magna aliqua. Ut enim ad minim veniam, quis nostrud exercitation ullamco laboris nisi ut aliquip ex ea commodo consequat."
-            )
-            
-            db.session.add(new_user)
-            db.session.commit()
-            
-            # UPLOAD PROFILE PIC TO S3
-            profile_pic = signup_form.picture.data
-            if profile_pic:
-                s3_profile_pic = secure_filename(signup_form.picture.data.filename)
-                url_path = request.form["url_path"].lower()
-                save_to_s3(profile_pic, url_path, s3_profile_pic)
-            
-
-            login_user(new_user)
-
+            session["new_user_hashed_password"] = generate_password_hash(request.form.get('password'), method='pbkdf2:sha256', salt_length=8)
+            session["new_user_name"] = request.form["name"]
+            session["new_user_job_title"] = request.form["job_title"]
+            print(session["new_user_name"])
             return redirect(url_for('payment'))
     logged_in = logged_in_status(current_user)
     return render_template("register.html", signup_form=signup_form, logged_in=logged_in)
@@ -234,7 +211,7 @@ def register():
 # STRIPE PAYMENT
 @app.route('/payment', methods=['GET','POST'])
 def payment():
-    url_path = current_user.url_path
+    print(session["new_user_email"])
     try:
         checkout_session = stripe.checkout.Session.create(
             line_items=[
@@ -246,13 +223,11 @@ def payment():
             ],
             mode='subscription',
             success_url=url_for('payment_success', _external=True)+"?session_id={CHECKOUT_SESSION_ID}",
-            cancel_url=url_for('home', _external=True),
+            cancel_url=url_for('register', _external=True),
             automatic_tax={'enabled': True},
         )
         #print("session: ", checkout_session.id, checkout_session.url, checkout_session)
-        stripe_session_id = checkout_session.id
-        current_user.stripe_session_id = stripe_session_id
-        db.session.commit()
+        session["stripe_session_id"] = checkout_session.id
     except Exception as e:
         return str(e)
 
@@ -288,13 +263,15 @@ def stripe_webhook():
         session_id = event['data']['object']['id']
         payment_status = event['data']['object']['payment_status']
         if payment_status=="paid":
-            print("Checkout complete, paid.")
-            result = db.session.execute(db.select(User).where(and_(User.stripe_session_id==session_id, User.payment==False)))
-            user = result.scalar()
-            user.stripe_customer_id = customer_id
-            user.stripe_subscription_id = subscription_id
-            user.stripe_payment_status= payment_status
-            db.session.commit()
+            print("Checkout complete, paid.")            
+            new_user = User(
+                stripe_customer_id = customer_id,
+                stripe_subscription_id = subscription_id,
+                stripe_session_id = session_id,
+                stripe_payment_status = payment_status,
+                )
+            db.session.add(new_user)
+            db.session.commit() 
         else:
             print("Checkout complete, not paid")
     if event['type']=="customer.subscription.deleted":
@@ -318,9 +295,23 @@ def stripe_webhook():
 
 @app.route('/payment-success')
 def payment_success():
-    #TODO: link to /card and pass current user    
-    current_user.payment=True
+    print(session["stripe_session_id"])
+    print(request.args.get('session_id'))
+    result = db.session.execute(db.select(User).where(User.stripe_session_id == session["stripe_session_id"]))
+    user = result.scalar()
+    # CREATE NEW USER
+    user.email = session["new_user_email"]
+    user.password = session["new_user_hashed_password"]
+    user.url_path = session["new_user_url_path"]
+    user.name = session["new_user_name"]
+    user.job_title = session["new_user_job_title"]
+    user.payment = True
+    user.theme="magazine"
+    user.colors="light"
+    user.headline_description="Lorem ipsum dolor sit amet, consectetur adipiscing elit, sed do eiusmod tempor incididunt ut labore et dolore magna aliqua. Ut enim ad minim veniam, quis nostrud exercitation ullamco laboris nisi ut aliquip ex ea commodo consequat."
     db.session.commit()
+    login_user(user)
+    
     email_registraion_success(current_user)
     flash(message="Payment Successful! Click Edit Card and Edit Images to customize your digital business card.")
     return redirect(url_for('card', url_path=current_user.url_path))
@@ -331,7 +322,7 @@ def payment_success():
 @app.route('/login', methods=["GET","POST"])
 def login():
     if current_user.is_authenticated:
-        return redirect(url_for('card'), url_path=current_user.url_path)
+        return redirect(url_for('card', url_path=current_user.url_path))
     else:
         login_form = LogInForm()
         session.pop('_flashes', None)
@@ -441,6 +432,8 @@ def card(url_path):
             # PASS LOGGED_IN FLAG TO SHOW MENU IF USER IS AUTHENTICATED
             logged_in = logged_in_status(current_user)
             return render_template("bus_card.html", user=user, logged_in=logged_in, qr_img=qr_encoded.decode('utf-8'), work1_url=work1_url, work2_url=work2_url, work3_url=work3_url, work4_url=work4_url, work5_url=work5_url, profile_pic=profile_pic)
+        else:
+            return render_template("no_user_found.html")
     else:
         return render_template("no_user_found.html")
 
