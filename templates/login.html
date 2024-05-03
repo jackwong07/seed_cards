@@ -7,11 +7,9 @@
   <main class="form-signin box">
     {% with messages = get_flashed_messages() %}
     {% if messages %}
-      {% for message in messages %}
-      <p style="color: red">{{ message }}</p>
-      {% endfor %}
+      <p style="color: red">{{ messages[-1] }}</p>
     {% endif %}
-  {% endwith %}
+    {% endwith %}
 
   
     {{ render_form(login_form, novalidate=True) }}

@@ -60,3 +60,28 @@ def email_registraion_success(user):
     except OSError as e:
         # If it fails, inform the user.
         print("Error: %s - %s." % (e.filename, e.strerror))
+        
+        
+# SEND EMAIL FOR CANCELLATION
+def email_cancellation_success(user):
+    with open(f"emails/cancellation_success.txt", mode='r') as template:
+        content = template.read()
+        content = content.replace("[NAME]", user.name)
+        content = content.replace("[URL_PATH]", user.url_path)
+
+    
+    with open(f"{user.name}_cancellation_email.txt", mode='w') as send_email:
+        send_email.write(content)
+        
+    with smtplib.SMTP("smtp.gmail.com") as connection:
+        connection.starttls()
+        connection.login(user=my_email, password=password)
+        connection.sendmail(from_addr=my_email, 
+                            to_addrs= user.email,
+                            msg=f"Seed Cards Cancellation Complete\n\n{content}")
+        
+    try:
+        os.remove(f"{user.name}_cancellation_email.txt")
+    except OSError as e:
+        # If it fails, inform the user.
+        print("Error: %s - %s." % (e.filename, e.strerror))

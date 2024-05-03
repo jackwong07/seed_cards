@@ -186,18 +186,25 @@ def home():
 def register():
     signup_form = SignupForm()
     if request.method=="POST" and signup_form.validate_on_submit():
-        form_email = request.form['email']
-        result = db.session.execute(db.select(User).where(User.email==form_email))
-        user = result.scalar()
-        if user:
-            #if user already exists
+        form_email = request.form['email'].lower().strip()
+        form_url_path = request.form["url_path"].lower().strip()
+        email_result = db.session.execute(db.select(User).where(User.email==form_email))
+        email_user = email_result.scalar()
+        url_result = db.session.execute(db.select(User).where(User.url_path==form_url_path))
+        url_user = url_result.scalar()
+        if email_user:
+            #if email already exists
             flash("You already have an account with this email. Please log in.")
             return redirect(url_for('login'))
+        elif url_user:
+            #if url_path already exists
+            flash("This URL Path is already taken")
+            return redirect(url_for('register'))
         else:
             new_user = User(
                 email = request.form["email"].lower().strip(),
                 password = generate_password_hash(request.form.get('password'), method='pbkdf2:sha256', salt_length=8),
-                url_path = request.form["url_path"].lower(),
+                url_path = request.form["url_path"].lower().strip(),
                 name = request.form["name"],
                 job_title = request.form["job_title"],
                 profile_pic = secure_filename(signup_form.picture.data.filename),
