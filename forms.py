@@ -20,7 +20,7 @@ class SignupForm(FlaskForm):
     email = StringField(label='Email', validators=[DataRequired(), validate_email])
     password = PasswordField(label='Password', validators=[DataRequired(), EqualTo('confirm', message='Passwords must match')])
     confirm  = PasswordField('Repeat Password')
-    url_path = StringField(label="Unique URL path", validators=[DataRequired()])
+    url_path = StringField(label="Unique URL path", description='Example: jordan-smith will have a url of seedcards.com/card/jordan-smith. This cannot be changed and must be unique from other accounts.', validators=[DataRequired()])
     name = StringField(label='Name', validators=[DataRequired()])
     job_title = StringField(label='Job Title', validators=[DataRequired()])
     submit = SubmitField(label="Submit")
