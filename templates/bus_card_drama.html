@@ -1,5 +1,14 @@
 {% include "header_card.html" %}
 
+        <!-- Drama Temp League Gothic Google Font-->
+        <link rel="preconnect" href="https://fonts.googleapis.com">
+        <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+        <link href="https://fonts.googleapis.com/css2?family=Dancing+Script:wght@400..700&family=League+Gothic&display=swap" rel="stylesheet">
+
+        <link rel="stylesheet" href="/static/css/drama-dark.css">
+
+</head>
+
 <body class="drama-temp">
 
 <div class = "container-fluid col-12 col-sm-8 col-lg-6 justify-content-between">
@@ -46,7 +55,7 @@
       {{user.company}} |
     {% endif %}
     {% if user.website_link %}
-  <a href="{{user.website_link}}" class="card-link" style="font-size: 14pt">{{user.website_link}}</a>
+  <a href="{{user.website_link}}" class="card-link drama-temp" style="font-size: 14pt">{{user.website_link}}</a>
  | 
   {% endif %}  
 
@@ -56,7 +65,7 @@
 </p>
 
 
-      <a href="mailto: {{user.displayed_email}}" class="card-link" style="font-size: 14pt">{{user.displayed_email}}</a>          
+      <a href="mailto: {{user.displayed_email}}" class="card-link drama-temp" style="font-size: 14pt">{{user.displayed_email}}</a>          
       
       {% if user.phone %}
       <p class="card-text text-start"style="font-size: 14pt">+1 {{user.phone}}</p>
@@ -112,35 +121,35 @@
 
 <!-- Works -->
   {% if work1_url: %}
-  <div class="card text-left">
+  <div class="card drama-temp">
     <img id="work-image" src="{{work1_url}}"></img>
   </div>
   <br/>
 {% endif %}
 
 {% if work2_url: %}
-  <div class="card text-left">
+  <div class="card drama-temp">
     <img id="work-image" src="{{work2_url}}"></img>
   </div>
   <br/>
 {% endif %}
 
 {% if work3_url: %}
-  <div class="card text-left">
+  <div class="card drama-temp">
     <img id="work-image" src="{{work3_url}}"></img>
   </div>
   <br/>
 {% endif %}
 
 {% if work4_url: %}
-  <div class="card text-left">
+  <div class="card drama-temp">
     <img id="work-image" src="{{work4_url}}"></img>
   </div>
   <br/>
 {% endif %}
 
 {% if work5_url: %}
-  <div class="card text-left">
+  <div class="card drama-temp">
     <img id="work-image" src="{{work5_url}}"></img>
   </div>
   <br/>
@@ -154,7 +163,18 @@
   </div>
 
 
+  <hr>
+  <div class="container link-back align-items-right" >
+  <p>Digital Business Card made by 
+   <a  class="drama-temp" href="{{url_for('home')}}">Seed Cards</a>
+  </p>
+  </div>
 
-  {% include "footer_card.html" %}
+ </div>
 
-</div>
+ <script src="https://cdn.jsdelivr.net/npm/bootstrap@5.3.3/dist/js/bootstrap.bundle.min.js" integrity="sha384-YvpcrYf0tY3lHB60NNkmXc5s9fDVZLESaAA55NDzOxhy9GkcIdslK1eN7N6jIeHz" crossorigin="anonymous"></script>
+
+</body>
+</html>
+
+

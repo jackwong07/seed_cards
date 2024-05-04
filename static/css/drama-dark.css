@@ -1,0 +1,70 @@
+
+ /* Drama Template */
+body.drama-temp {
+    background-color: #202127;
+    background-repeat: no-repeat;
+    background-repeat: no-repeat;
+    background-size: cover;
+    min-width: 100%;
+    min-height: 100vh;
+}
+h3.drama-temp {
+    font-family:'Franklin Gothic Medium', 'Arial Narrow', Arial, sans-serif;
+    color: burlywood;
+  }
+.profile-pic{
+    margin-bottom: 1em;
+}
+.card.drama-temp{
+    border:0;
+}
+
+.site-heading{
+    margin-left:0em;
+}
+.league-gothic {
+font-family: "League Gothic", sans-serif;
+font-optical-sizing: auto;
+font-weight: 500;
+font-style: normal;
+font-variation-settings:"wdth" 100;
+font-size: 50pt;
+color: white;
+}
+h1 {
+    color: rgb(255, 255, 255);
+}
+
+.social-icon{
+    filter: invert(60%) sepia(12%) saturate(1500%) hue-rotate(155deg) brightness(2000%) contrast(95%);
+}
+a.drama-temp{
+    color:burlywood;
+}
+p{
+    color:white;
+}
+hr {
+    border: none;
+    height: 5px;
+    /* Set the hr color */
+    color: burlywood;  /* old IE */
+    background-color: burlywood;  /* Modern Browsers */
+}
+button{
+    background-color: burlywood;
+    display: inline-block;
+    font-size: 16px;
+    padding: 6px 6px;
+    border-radius: 6px;
+    font-weight:bold;
+}
+.card{
+    border:none;
+}
+
+
+#drama-logo-img{
+height: 40px;
+margin-left: 10px
+}

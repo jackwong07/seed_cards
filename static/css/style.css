@@ -21,135 +21,25 @@
     font-size: x-small;
 }
 
-header {
-    height: 100px;
-    background-color: rgb(255, 255, 255);
-  }
-  .hero {
-    padding-bottom: 37.5%; /* = ( 600 / 1600 ) x 100 */
-    background-color: rgb(123, 161, 183);
-    background-size: cover;
-    height: 400px;
-}
 
 /* Any Card */
 #logo-img{
   width: 30px;
 }
 
-/* Magazine Template */
-body.magazine_temp.light {
-  background-color: #f9f9f9;
-  background-repeat: no-repeat;
-  background-repeat: no-repeat;
-  background-size: cover;
-  min-width: 100%;
-  min-height: 100vh;
-}
-
-
-
-.site-heading.magazine_temp{
-  -webkit-text-fill-color: rgb(0, 0, 0);
-  background-color: rgb(255, 255, 255);
-  text-indent: 30px;
-  display:table;
-  padding-right: 15px;
-}
-
-.sub-heading.magazine_temp{
-  -webkit-text-fill-color: rgb(0, 0, 0);
-  background-color: rgb(255, 255, 255);
-  text-indent: 30px;
-  display:table;
-  padding-right: 15px;
-  margin-top: 10px;
-}
-
-.body-text.magazine_temp{
-  padding: 10px;
-  margin: 10px;
-  color: rgb(0, 0, 0);
-}
-
-.modal {
-  text-align: center;
-}
-.modal-dialog {
-  display: flex;
-  align-items: center;
-  min-height: calc(100% - 0rem);
- }
-
- #work-image{
+#work-image{
   background-color: rgb(123, 161, 183);
   min-height: 100px;
- }
+  border: 0;
+}
 
-
- /* Drama Template */
- body.drama-temp {
-  background-color: #202127;
-  background-repeat: no-repeat;
-  background-repeat: no-repeat;
+ header {
+  height: 100px;
+  background-color: rgb(255, 255, 255);
+}
+.hero {
+  padding-bottom: 37.5%; /* = ( 600 / 1600 ) x 100 */
+  background-color: rgb(123, 161, 183);
   background-size: cover;
-  min-width: 100%;
-  min-height: 100vh;
-}
-
-.drama-temp{
-}
-  .profile-pic{
-    margin-bottom: 1em;
-  }
-  .site-heading{
-    margin-left:0em;
-  }
-  .league-gothic {
-  font-family: "League Gothic", sans-serif;
-  font-optical-sizing: auto;
-  font-weight: 500;
-  font-style: normal;
-  font-variation-settings:"wdth" 100;
-  font-size: 50pt;
-  }
-  h1 {
-    color: rgb(255, 255, 255);
-  }
-  h3 {
-    font-family:'Franklin Gothic Medium', 'Arial Narrow', Arial, sans-serif;
-    color: burlywood;
-  }
-  .social-icon{
-    filter: invert(60%) sepia(12%) saturate(1500%) hue-rotate(155deg) brightness(2000%) contrast(95%);
-  }
-  a{
-    color:burlywood;
-  }
-  p{
-    color:white;
-  }
-  hr {
-    border: none;
-    height: 5px;
-    /* Set the hr color */
-    color: burlywood;  /* old IE */
-    background-color: burlywood;  /* Modern Browsers */
-  }
-  button{
-    background-color: burlywood;
-    display: inline-block;
-    font-size: 16px;
-    padding: 6px 6px;
-    border-radius: 6px;
-    font-weight:bold;
-  }
-  .card{
-    border:none;
-  }
-
-
-#drama-logo-img{
-  height: 40px;
-  margin-left: 10px
+  height: 400px;
 }
