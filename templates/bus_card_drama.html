@@ -1,0 +1,158 @@
+{% include "header_card.html" %}
+
+<body class="drama-temp">
+
+<div class = "container-fluid col-12 col-sm-8 col-lg-6 justify-content-between">
+
+<!-- Authenticated Menu -->
+{% include "menu_card.html" %}
+
+{% with messages = get_flashed_messages() %}
+{% if messages %}
+  <p style="color: light green">{{ messages[-1] }}</p>
+{% endif %}
+{% endwith %}
+
+
+<!-- Profile Image-->
+{%if profile_pic_url %}
+<div class="hero drama-temp profile-pic"style="background-image: url('{{profile_pic_url}}')">
+{%endif %}
+{%if not profile_pic_url %}
+<div class="hero" style="position: relative;">
+{%endif %}
+</div>
+
+
+  <!-- Top details-->
+  <div class="justify-content-left ">
+    <div class="drama-temp site-heading">
+      <h1 class="drama-temp">{{ user.name }}</h1>
+    </div>
+    <div class="drama-temp site-heading">
+      <h3 class="drama-temp">{{ user.job_title }}
+        {% if user.location %}
+        | {{ user.location}}
+        {% endif %}
+        {%if logo_url %}
+        <img id="drama-logo-img" src= '{{logo_url}}'></img>
+        {%endif %}
+      </h3>
+    </div>
+  </div>
+
+  <p class="card-text text-start"><small>{{user.headline_description| safe}}</small></p>
+
+
+  <p style="font-size: 14pt">
+    {% if user.company %}
+      {{user.company}} |
+    {% endif %}
+    {% if user.website_link %}
+  <a href="{{user.website_link}}" class="card-link" style="font-size: 14pt">{{user.website_link}}</a>
+  {% endif %}  
+</p>
+
+
+      <a href="mailto: {{user.displayed_email}}" class="card-link" style="font-size: 14pt">{{user.displayed_email}}</a>          
+      
+      {% if user.phone %}
+      <p class="card-text text-start"style="font-size: 14pt">+1 {{user.phone}}</p>
+    {% endif %}
+
+
+
+<!-- Buttons -->
+
+<div class="d-flex card-body justify-content-around">
+
+<button type="button" class="drama-temp" data-bs-toggle="modal" data-bs-target="#QRCodeModal" style="color: black; width: 150px">
+  QR Code
+</button>
+<!-- Modal -->
+<div class="modal fade" id="QRCodeModal" tabindex="-1" aria-labelledby="exampleModalLabel" aria-hidden="true">
+  <div class="modal-dialog">
+    <div class="modal-content">
+      <div class="modal-header">
+        <h5 class="modal-title" id="modal-title">Scan your QR Code</h5>
+        <button type="button" class="btn-close" data-bs-dismiss="modal" aria-label="Close"></button>
+      </div>
+        <div class="modal-body">
+          <img src="data:image/png;base64,{{ qr_img }}">
+        </div>
+    </div>
+  </div>
+</div>
+
+    <button type="button" class="drama-temp" style="width: 150px"><a style="color: black; text-decoration: none; font-weight:bold" href="{{url_for('generate_vcf', url_path=user.url_path)}}">Save Contact</a></button>
+  </div>
+
+
+  <br/>
+<!-- Social media -->
+<div class="card-body">
+  {% if user.social_plat1 and user.social_plat1!="" %}
+  <a href="{{user.social_link1}}" class="pe-4"><img class="drama-temp social-icon" src="/static/social_icons/{{user.social_plat1}}.svg" width="35" height="35"/></a>
+  {% endif %}
+  {% if user.social_plat2 and user.social_plat2!="" %}
+  <a href="{{user.social_link2}}" class="pe-4"><img class="drama-temp social-icon" src="/static/social_icons/{{user.social_plat2}}.svg" width="35" height="35"/></a>
+  {% endif %}
+  {% if user.social_plat3 and user.social_plat3!="" %}
+  <a href="{{user.social_link3}}" class="pe-4"><img class="drama-temp social-icon" src="/static/social_icons/{{user.social_plat3}}.svg" width="35" height="35"/></a>
+  {% endif %}
+  {% if user.social_plat4 and user.social_plat14!="" %}
+  <a href="{{user.social_link4}}" class="pe-4"><img class="drama-temp social-icon" src="/static/social_icons/{{user.social_plat4}}.svg" width="35" height="35"/></a>
+  {% endif %}
+</div>
+
+
+  <hr class="drama-temp"/>
+
+<!-- Works -->
+  {% if work1_url: %}
+  <div class="card text-left">
+    <img id="work-image" src="{{work1_url}}"></img>
+  </div>
+  <br/>
+{% endif %}
+
+{% if work2_url: %}
+  <div class="card text-left">
+    <img id="work-image" src="{{work2_url}}"></img>
+  </div>
+  <br/>
+{% endif %}
+
+{% if work3_url: %}
+  <div class="card text-left">
+    <img id="work-image" src="{{work3_url}}"></img>
+  </div>
+  <br/>
+{% endif %}
+
+{% if work4_url: %}
+  <div class="card text-left">
+    <img id="work-image" src="{{work4_url}}"></img>
+  </div>
+  <br/>
+{% endif %}
+
+{% if work5_url: %}
+  <div class="card text-left">
+    <img id="work-image" src="{{work5_url}}"></img>
+  </div>
+  <br/>
+{% endif %}
+
+
+<!-- Description -->
+<hr class="drama-temp"/>
+<div>
+    <p class="body-text card-text text-start" style="color:black">{{user.body | safe}}</p>
+  </div>
+
+</div>
+
+<br/>
+
+  {% include "footer_card.html" %}

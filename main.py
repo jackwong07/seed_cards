@@ -139,8 +139,8 @@ s3_resource = boto3.resource('s3',
 def save_to_s3(image, url_path, s3_name):
     img = Image.open(image)
     width, height= img.size
-    if width>600:
-        img.thumbnail((600,1080))
+    if width>1200:
+        img.thumbnail((1200,2400))
     if img.mode != "RGB":
         img = img.convert('RGB')
     buffer=io.BytesIO()
@@ -418,7 +418,6 @@ def card(url_path):
     if user:
         if user.payment==True:
            
-            
             # GRAB IMAGES FROM S3
             # PROFILE PIC
             if user.profile_pic and user.profile_pic!="":
@@ -459,7 +458,14 @@ def card(url_path):
                 
             # PASS LOGGED_IN FLAG TO SHOW MENU IF USER IS AUTHENTICATED
             logged_in = logged_in_status(current_user)
-            return render_template("bus_card.html", user=user, logged_in=logged_in, qr_img=qr_encoded.decode('utf-8'), work1_url=work1_url, work2_url=work2_url, work3_url=work3_url, work4_url=work4_url, work5_url=work5_url, profile_pic_url=profile_pic_url, logo_url=logo_url)
+            
+            if user.theme=="Magazine":            
+                return render_template("bus_card_mag.html", user=user, logged_in=logged_in, qr_img=qr_encoded.decode('utf-8'), work1_url=work1_url, work2_url=work2_url, work3_url=work3_url, work4_url=work4_url, work5_url=work5_url, profile_pic_url=profile_pic_url, logo_url=logo_url)
+            elif user.theme=="Drama":
+                return render_template("bus_card_drama.html", user=user, logged_in=logged_in, qr_img=qr_encoded.decode('utf-8'), work1_url=work1_url, work2_url=work2_url, work3_url=work3_url, work4_url=work4_url, work5_url=work5_url, profile_pic_url=profile_pic_url, logo_url=logo_url)
+            else:
+                return render_template("bus_card_drama.html", user=user, logged_in=logged_in, qr_img=qr_encoded.decode('utf-8'), work1_url=work1_url, work2_url=work2_url, work3_url=work3_url, work4_url=work4_url, work5_url=work5_url, profile_pic_url=profile_pic_url, logo_url=logo_url)
+    
         else:
             return render_template("no_user_found.html", qr_img=qr_encoded.decode('utf-8'))
     else:

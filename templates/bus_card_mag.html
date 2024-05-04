@@ -1,24 +1,17 @@
 {% include "header_card.html" %}
 
-{% if user.colors=='light': %}
 <body class="magazine_temp light">
-{% elif user.colors=='dark': %}
-<body class="magazine_temp dark">
-{% endif %}
 
 <div class = "container-fluid col-12 col-sm-8 col-lg-6 justify-content-between">
 
 <!-- Authenticated Menu -->
 {% include "menu_card.html" %}
 
-
 {% with messages = get_flashed_messages() %}
 {% if messages %}
   <p style="color: green">{{ messages[-1] }}</p>
 {% endif %}
 {% endwith %}
-
-
 
 <!-- Profile Image-->
 {%if profile_pic_url %}
@@ -28,8 +21,6 @@
 {%if not profile_pic_url %}
 <div class="hero" style="position: relative;">
 {%endif %}
-
-
 
   <div class="justify-content-left position-absolute" style="bottom:10px">
     <div class="site-heading magazine_temp">
@@ -55,14 +46,16 @@
           {% if user.company %}
            {{user.company}} |
         {% endif %}
-      {% if user.location %}
+        {% if user.location %}
         {{ user.location}}
         {% endif %}
+        </p>
 
-      </p>
-
-        <p class="card-text text-start"><small>{{user.headline_description| safe}}</small></p>
+      <p class="card-text text-start"><small>{{user.headline_description| safe}}</small></p>
       <a href="{{user.website_link}}" class="card-link" style="font-size: 14pt">{{user.website_link}}</a>
+    
+    
+    
     <hr/>
       <div class="card-body">
         {% if user.social_plat1 and user.social_plat1!="" %}

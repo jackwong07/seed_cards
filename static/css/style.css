@@ -32,10 +32,13 @@ header {
     height: 400px;
 }
 
-
+/* Any Card */
+#logo-img{
+  width: 30px;
+}
 
 /* Magazine Template */
-body.magazine_temp {
+body.magazine_temp.light {
   background-color: #f9f9f9;
   background-repeat: no-repeat;
   background-repeat: no-repeat;
@@ -44,9 +47,6 @@ body.magazine_temp {
   min-height: 100vh;
 }
 
-#logo-img{
-    width: 30px;
-}
 
 
 .site-heading.magazine_temp{
@@ -85,3 +85,60 @@ body.magazine_temp {
   background-color: rgb(123, 161, 183);
   min-height: 100px;
  }
+
+
+ /* Drama Template */
+ body.drama-temp {
+  background-color: #202127;
+  background-repeat: no-repeat;
+  background-repeat: no-repeat;
+  background-size: cover;
+  min-width: 100%;
+  min-height: 100vh;
+}
+
+.drama-temp{
+  color:#f9f9f9;
+}
+  .profile-pic{
+    margin-bottom: 2em;
+  }
+  .site-heading{
+    margin-left:0em;
+    font-family: Impact, Haettenschweiler, 'Arial Narrow Bold', sans-serif;
+  }
+  .social-icon{
+    filter: invert(100%) sepia(34%) saturate(3848%) hue-rotate(302deg) brightness(85%) contrast(105%);
+    margin-right: 40px;
+  }
+  a{
+    color:burlywood;
+  }
+  hr {
+    border: none;
+    height: 5px;
+    /* Set the hr color */
+    color: burlywood;  /* old IE */
+    background-color: burlywood;  /* Modern Browsers */
+  }
+  button{
+    background-color: burlywood;
+    display: inline-block;
+    font-size: 16px;
+    padding: 6px 6px;
+    border-radius: 6px;
+    font-weight:bold;
+  }
+  .card{
+    border:none;
+  }
+
+h3.drama-temp{
+  font-family:'Franklin Gothic Medium', 'Arial Narrow', Arial, sans-serif
+}
+
+.drama-temp
+
+#drama-logo-img{
+  height: 50px
+}
