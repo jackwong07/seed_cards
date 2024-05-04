@@ -1,23 +1,21 @@
+/* All forms */
 .form-group {
   margin-bottom: 1rem;
 }
 
+/* Register */
 .form-signin {
     max-width: 330px;
     padding: 1rem;
 }
 
+/* Edit forms */
 .box {
     padding-left: 2rem;
     padding-right: 2rem;
 }
 
-.profile-pic{
-    max-height: 250px;
-    width:fit-content;
-    align-self: center;
-}
-
+/* Index Footer */
 .link-back{
     align-content: right;
     font-size: x-small;
@@ -32,23 +30,13 @@ header {
     background-color: rgb(123, 161, 183);
     background-size: cover;
     height: 400px;
-  }
-
-  .mask-custom {
-    backdrop-filter: contrast(140%) brightness(100%) saturate(100%) sepia(50%) hue-rotate(0deg) grayscale(0%) invert(0%) blur(0px);
-    mix-blend-mode: lighten;
-    background: rgba(161, 44, 199, 0.31);
-    opacity: 1;
-  }
-
-
+}
 
 
 
 /* Magazine Template */
 body.magazine_temp {
   background-color: #f9f9f9;
-  background-image: linear-gradient(225deg, #ffffff 0%, #d1d1d1 100%);
   background-repeat: no-repeat;
   background-repeat: no-repeat;
   background-size: cover;
@@ -58,10 +46,6 @@ body.magazine_temp {
 
 #logo-img{
     width: 30px;
-}
-
-.nav-link.magazine_temp{
-  color: rgb(51,102,204);
 }
 
 
@@ -85,9 +69,8 @@ body.magazine_temp {
 .body-text.magazine_temp{
   padding: 10px;
   margin: 10px;
-  color: red;
+  color: rgb(0, 0, 0);
 }
-
 
 .modal {
   text-align: center;
