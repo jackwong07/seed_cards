@@ -98,21 +98,36 @@ body.magazine_temp.light {
 }
 
 .drama-temp{
-  color:#f9f9f9;
 }
   .profile-pic{
-    margin-bottom: 2em;
+    margin-bottom: 1em;
   }
   .site-heading{
     margin-left:0em;
-    font-family: Impact, Haettenschweiler, 'Arial Narrow Bold', sans-serif;
+  }
+  .league-gothic {
+  font-family: "League Gothic", sans-serif;
+  font-optical-sizing: auto;
+  font-weight: 500;
+  font-style: normal;
+  font-variation-settings:"wdth" 100;
+  font-size: 50pt;
+  }
+  h1 {
+    color: rgb(255, 255, 255);
+  }
+  h3 {
+    font-family:'Franklin Gothic Medium', 'Arial Narrow', Arial, sans-serif;
+    color: burlywood;
   }
   .social-icon{
-    filter: invert(100%) sepia(34%) saturate(3848%) hue-rotate(302deg) brightness(85%) contrast(105%);
-    margin-right: 40px;
+    filter: invert(60%) sepia(12%) saturate(1500%) hue-rotate(155deg) brightness(2000%) contrast(95%);
   }
   a{
     color:burlywood;
+  }
+  p{
+    color:white;
   }
   hr {
     border: none;
@@ -133,12 +148,8 @@ body.magazine_temp.light {
     border:none;
   }
 
-h3.drama-temp{
-  font-family:'Franklin Gothic Medium', 'Arial Narrow', Arial, sans-serif
-}
-
-.drama-temp
 
 #drama-logo-img{
-  height: 50px
+  height: 40px;
+  margin-left: 10px
 }

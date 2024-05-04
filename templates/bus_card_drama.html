@@ -27,16 +27,13 @@
   <!-- Top details-->
   <div class="justify-content-left ">
     <div class="drama-temp site-heading">
-      <h1 class="drama-temp">{{ user.name }}</h1>
+      <h1 class="drama-temp league-gothic">{{ user.name }}</h1>
     </div>
     <div class="drama-temp site-heading">
       <h3 class="drama-temp">{{ user.job_title }}
         {% if user.location %}
         | {{ user.location}}
         {% endif %}
-        {%if logo_url %}
-        <img id="drama-logo-img" src= '{{logo_url}}'></img>
-        {%endif %}
       </h3>
     </div>
   </div>
@@ -50,7 +47,12 @@
     {% endif %}
     {% if user.website_link %}
   <a href="{{user.website_link}}" class="card-link" style="font-size: 14pt">{{user.website_link}}</a>
+ | 
   {% endif %}  
+
+  {%if logo_url %}
+  <img id="drama-logo-img" src= '{{logo_url}}'></img>
+  {%endif %}
 </p>
 
 
@@ -90,7 +92,7 @@
 
   <br/>
 <!-- Social media -->
-<div class="card-body">
+<div class="d-flex card-body justify-content-around">
   {% if user.social_plat1 and user.social_plat1!="" %}
   <a href="{{user.social_link1}}" class="pe-4"><img class="drama-temp social-icon" src="/static/social_icons/{{user.social_plat1}}.svg" width="35" height="35"/></a>
   {% endif %}
@@ -151,8 +153,8 @@
     <p class="body-text card-text text-start" style="color:black">{{user.body | safe}}</p>
   </div>
 
-</div>
 
-<br/>
 
   {% include "footer_card.html" %}
+
+</div>
