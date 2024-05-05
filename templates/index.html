@@ -2,11 +2,15 @@
 
 {% include "menu.html" %}
 
+
+<div class="container col-xxl-8 px-4 py-2 justify-content-between">
+
 {% with messages = get_flashed_messages() %}
 {% if messages %}
-  <p style="color: red">{{ messages[-1] }}</p>
+  <p style="color: green">{{ messages[-1] }}</p>
 {% endif %}
 {% endwith %}
+</div>
 
     <!-- Title -->
     <div class="container col-xxl-8 px-4 py-2 justify-content-between">
@@ -79,7 +83,58 @@
       </div>
     </div>
 
+<br>
+    <div class="container col-xxl-8 px-4 py-2">
+    <section id="subsection-contact">
+      <!--Contact form-->
 
+<section class="pb-4">
+  <div class="border rounded-5">
+
+    <div class="px-4">
+    <h4 class="mt-5">Contact form</h4>
+    <p>Question? Contact us at jacklyn.wong91@gmail.com or send a message here.</p>
+    </div>
+
+      <section class="w-100 p-4 d-flex justify-content-center pb-4">
+
+        <form style="width: 26rem;" action method="post" class="form" role="form" novalidate>
+          <!-- Name input -->
+          <div data-mdb-input-init="" class="form-outline mb-4" data-mdb-input-initialized="true">
+            <label class="form-label" for="name" style="margin-left: 0px;">Name</label>
+            <input type="text" id="name" name="name" class="form-control">
+
+          <!-- Email input -->
+          <div data-mdb-input-init="" class="form-outline mb-4" data-mdb-input-initialized="true">
+            <label class="form-label" for="email" style="margin-left: 0px;">Email address</label>
+            <input type="email" id="email" name="email" class="form-control">
+
+          <!-- Message input -->
+          <div data-mdb-input-init="" class="form-outline mb-4" data-mdb-input-initialized="true">
+            <label class="form-label" for="message" style="margin-left: 0px;">Message</label>
+            <textarea class="form-control" id="message" name="message" rows="4"></textarea>
+
+          <!-- Checkbox -->
+          <div class="form-check d-flex justify-content-center mb-4">
+            <input class="form-check-input me-2" type="checkbox" value="" id="form4Example4" checked="">
+            <label class="form-check-label" for="form4Example4">
+              Send me a copy of this message
+            </label>
+          </div>
+
+          <!-- Submit button -->
+          <input class="btn btn-primary" id="submit" name="submit" type="submit" value="Submit">
+        </form>
+      </section>
+  
+      
+    </div>
+    
+    
+  </div>
+</section>
+
+  </div>
 
   <script src="https://cdn.jsdelivr.net/npm/bootstrap@5.3.3/dist/js/bootstrap.bundle.min.js" integrity="sha384-YvpcrYf0tY3lHB60NNkmXc5s9fDVZLESaAA55NDzOxhy9GkcIdslK1eN7N6jIeHz" crossorigin="anonymous"></script>
 

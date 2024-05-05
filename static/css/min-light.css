@@ -1,0 +1,81 @@
+body.min-temp{
+    background-color: rgb(246, 240, 227);
+}
+h1.fredoka {
+    font-family: "Fredoka", sans-serif;
+    font-optical-sizing: auto;
+    font-style: normal;
+    font-variation-settings:
+      "wdth" 100;
+    color: rgb(61, 36, 12);
+  }
+
+h3.fredoka{
+    font-family: "Fredoka", sans-serif;
+    font-optical-sizing: auto;
+    font-style: normal;
+    font-variation-settings:
+      "wdth" 100;
+    font-size: 14pt;
+    color: rgb(61, 36, 12);
+}
+
+.hero.min-temp{
+    border-radius: 30px;
+    background-size: cover;
+    height: 300px;
+    background-repeat: no-repeat;
+    margin-left: 2em;
+    margin-right: 2em;
+    margin-bottom: 1em;
+}
+
+p{
+    color: rgb(61, 36, 12);
+    font-family: "Fredoka", sans-serif;
+    font-optical-sizing: auto;
+    font-style: normal;
+    font-weight:lighter;
+    font-variation-settings:
+      "wdth" 100;
+    font-size: 12pt;
+}
+a.min-temp{
+    color: rgb(70, 91, 13);
+}
+
+.social-icon{
+    filter: invert(30%) sepia(6%) saturate(6877%) hue-rotate(37deg) brightness(95%) contrast(90%);
+    margin-right: 30px;
+}
+#min-logo-img{
+    height: 40px;  
+    width: 40px;
+}
+.d-flex{
+    gap: 5em;
+}
+button.min-temp{
+    border-radius: 10px;
+    margin: 10px;
+    justify-self: center;
+    font-weight:bold;
+    width: 80%;
+    height: 40px;
+    border:0;
+}
+#qr-button{
+    background-color: rgb(245, 155, 143);
+    color: white;
+}
+#save-contact{
+    background-color: rgb(230, 172, 101);
+    color: white;    
+}
+#work-image{
+    border-radius: 10px;
+}
+.card.min-temp{
+    border:0;
+    background-color:rgba(255, 255, 255, 0);
+}

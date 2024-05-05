@@ -85,3 +85,15 @@ def email_cancellation_success(user):
     except OSError as e:
         # If it fails, inform the user.
         print("Error: %s - %s." % (e.filename, e.strerror))
+        
+        
+def email_contact_form(contact_name, contact_email, contact_message):       
+    contact_name = contact_name, contact_email
+    contact_email = contact_email
+    contact_message = contact_message
+    with smtplib.SMTP("smtp.gmail.com") as connection:
+        connection.starttls()
+        connection.login(user=my_email, password=password)
+        connection.sendmail(from_addr=my_email, 
+                            to_addrs= my_email,
+                            msg=f"Seed Cards New Contact Message\n\nName: {contact_name}\nEmail: {contact_email}\nMessage: {contact_message}")

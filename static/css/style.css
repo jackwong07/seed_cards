@@ -17,10 +17,21 @@
 
 /* Index Footer */
 .link-back{
-    align-content: right;
-    font-size: x-small;
+  align-content: right;
+  font-size: x-small;
 }
 
+/* Index Form */
+input{
+  margin-bottom: 1em;
+}
+textarea{
+  margin-bottom: 1em;
+}
+header {
+  height: 100px;
+  background-color: rgb(255, 255, 255);
+}
 
 /* Any Card */
 #logo-img{
@@ -33,10 +44,6 @@
   border: 0;
 }
 
- header {
-  height: 100px;
-  background-color: rgb(255, 255, 255);
-}
 .hero {
   padding-bottom: 37.5%; /* = ( 600 / 1600 ) x 100 */
   background-color: rgb(123, 161, 183);

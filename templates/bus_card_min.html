@@ -1,0 +1,188 @@
+{% include "header_card.html" %}
+
+        <!-- Google Font Fredoka -->
+        <link rel="preconnect" href="https://fonts.googleapis.com">
+        <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+        <link href="https://fonts.googleapis.com/css2?family=Dancing+Script:wght@400..700&family=Fredoka:wght@300..700&family=League+Gothic&display=swap" rel="stylesheet">
+        <link rel="stylesheet" href="/static/css/min-light.css">
+
+</head>
+
+<body class="min-temp">
+
+<div class = "container-fluid col-12 col-sm-8 col-lg-6 justify-content-between">
+
+<!-- Authenticated Menu -->
+{% include "menu_card.html" %}
+
+{% with messages = get_flashed_messages() %}
+{% if messages %}
+  <p style="color: light green">{{ messages[-1] }}</p>
+{% endif %}
+{% endwith %}
+
+
+<!-- Profile Image-->
+{%if profile_pic_url %}
+<div class="hero profile-pic min-temp"style="background-image: url('{{profile_pic_url}}')">
+{%endif %}
+{%if not profile_pic_url %}
+<div class="hero min-temp" style="position: relative;">
+{%endif %}
+</div>
+
+
+  <!-- Top details-->
+  <div>
+      <h1 class="fredoka text-center">{{ user.name }}</h1>
+      <h3 class="fredoka text-center">{{ user.job_title }}
+        {% if user.location %}
+        | {{ user.location}}
+        {% endif %}
+      </h3>
+  </div>
+
+
+
+<!-- Company, Location, Logo -->
+<div class="d-flex justify-content-left">
+  <div class="align-content-center">
+    {%if logo_url %}
+    <img  id="min-logo-img" src= '{{logo_url}}'></img>
+    {%endif %}
+    </div>
+ 
+  <div>
+<p style="font-size: 14pt; margin-bottom:0em">
+  {% if user.company %}
+    {{user.company}}</p>
+  {% endif %}
+  {% if user.website_link %}
+<a href="{{user.website_link}}" class="card-link min-temp" style="font-size: 10pt">{{user.website_link}}</a>
+{% endif %}  
+</div>
+
+</div>
+
+<p class="card-text text-start"><small>{{user.headline_description| safe}}</small></p>
+
+
+<!-- Social media -->
+<div class="card-body">
+  {% if user.social_plat1 and user.social_plat1!="" %}
+  <a href="{{user.social_link1}}" ><img class="min-temp social-icon" src="/static/social_icons/{{user.social_plat1}}.svg" width="35" height="35"/></a>
+  {% endif %}
+  {% if user.social_plat2 and user.social_plat2!="" %}
+  <a href="{{user.social_link2}}" ><img class="min-temp social-icon" src="/static/social_icons/{{user.social_plat2}}.svg" width="35" height="35"/></a>
+  {% endif %}
+  {% if user.social_plat3 and user.social_plat3!="" %}
+  <a href="{{user.social_link3}}" ><img class="min-temp social-icon" src="/static/social_icons/{{user.social_plat3}}.svg" width="35" height="35"/></a>
+  {% endif %}
+  {% if user.social_plat4 and user.social_plat14!="" %}
+  <a href="{{user.social_link4}}" ><img class="min-temp social-icon" src="/static/social_icons/{{user.social_plat4}}.svg" width="35" height="35"/></a>
+  {% endif %}
+</div>
+
+<br>
+
+<!-- Email, Phone -->
+<div class="">
+      <a href="mailto: {{user.displayed_email}}" class="card-link min-temp" style="font-size: 14pt">{{user.displayed_email}}</a>          
+      
+      {% if user.phone %}
+      <p class="card-text text-start col-6"style="font-size: 14pt">+1 {{user.phone}}</p>
+    {% endif %}
+</div>
+
+<br>
+
+<!-- Buttons -->
+
+
+<div class="d-flex justify-content-center">
+<button type="button" class="min-temp" id="qr-button" data-bs-toggle="modal" data-bs-target="#QRCodeModal">
+  QR Code
+</button>
+<!-- Modal -->
+<div class="modal fade" id="QRCodeModal" tabindex="-1" aria-labelledby="exampleModalLabel" aria-hidden="true">
+  <div class="modal-dialog">
+    <div class="modal-content">
+      <div class="modal-header">
+        <h5 class="modal-title" id="modal-title">Scan your QR Code</h5>
+        <button type="button" class="btn-close" data-bs-dismiss="modal" aria-label="Close"></button>
+      </div>
+        <div class="modal-body">
+          <img src="data:image/png;base64,{{ qr_img }}">
+        </div>
+    </div>
+  </div>
+</div>
+</div>
+
+<div class="d-flex justify-content-center">
+    <button type="button" class="min-temp" id="save-contact"><a style="color: white; text-decoration: none; font-weight:bold" href="{{url_for('generate_vcf', url_path=user.url_path)}}">Save Contact</a></button>
+</div>
+
+
+  <br/>
+
+<!-- Works -->
+  {% if work1_url: %}
+  <div class="card min-temp">
+    <img id="work-image" src="{{work1_url}}"></img>
+  </div>
+  <br/>
+{% endif %}
+
+{% if work2_url: %}
+  <div class="card min-temp">
+    <img id="work-image" src="{{work2_url}}"></img>
+  </div>
+  <br/>
+{% endif %}
+
+{% if work3_url: %}
+  <div class="card min-temp">
+    <img id="work-image" src="{{work3_url}}"></img>
+  </div>
+  <br/>
+{% endif %}
+
+{% if work4_url: %}
+  <div class="card min-temp">
+    <img id="work-image" src="{{work4_url}}"></img>
+  </div>
+  <br/>
+{% endif %}
+
+{% if work5_url: %}
+  <div class="card min-temp">
+    <img id="work-image" src="{{work5_url}}"></img>
+  </div>
+  <br/>
+{% endif %}
+
+
+<!-- Description -->
+<hr class="min-temp"/>
+<div>
+    <p class="body-text card-text text-start" style="color:black">{{user.body | safe}}</p>
+  </div>
+
+  
+<!-- Footer -->
+  <hr>
+  <div class="container link-back align-items-right" >
+  <p>Digital Business Card made by 
+   <a  class="min-temp" href="{{url_for('home')}}">Seed Cards</a>
+  </p>
+  </div>
+
+ </div>
+
+ <script src="https://cdn.jsdelivr.net/npm/bootstrap@5.3.3/dist/js/bootstrap.bundle.min.js" integrity="sha384-YvpcrYf0tY3lHB60NNkmXc5s9fDVZLESaAA55NDzOxhy9GkcIdslK1eN7N6jIeHz" crossorigin="anonymous"></script>
+
+</body>
+</html>
+
+

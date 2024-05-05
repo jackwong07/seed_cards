@@ -185,11 +185,19 @@ def get_vcard(vcard: VCard) -> io.BytesIO:
 # CREATE ROUTES AND RENDER HTML TEMPLATES
 
 # HOME
-@app.route('/')
+@app.route('/', methods=["GET","POST"])
 def home():
     session.pop('_flashes', None)
     # PASS LOGGED_IN FLAG TO SHOW MENU IF USER IS AUTHENTICATED
     logged_in = logged_in_status(current_user)
+    
+    # CONTACT FORM
+    if request.method=="POST":
+        contact_name = request.form['name']
+        contact_email = request.form['email']
+        contact_message = request.form['message']
+        email_contact_form(contact_name, contact_email, contact_message)
+        flash("Thanks for your message! We will get back to you shortly.")
     return render_template("index.html", logged_in=logged_in, current_user=current_user)
 
 # SIGN UP
@@ -463,8 +471,10 @@ def card(url_path):
                 return render_template("bus_card_mag.html", user=user, logged_in=logged_in, qr_img=qr_encoded.decode('utf-8'), work1_url=work1_url, work2_url=work2_url, work3_url=work3_url, work4_url=work4_url, work5_url=work5_url, profile_pic_url=profile_pic_url, logo_url=logo_url)
             elif user.theme=="Drama":
                 return render_template("bus_card_drama.html", user=user, logged_in=logged_in, qr_img=qr_encoded.decode('utf-8'), work1_url=work1_url, work2_url=work2_url, work3_url=work3_url, work4_url=work4_url, work5_url=work5_url, profile_pic_url=profile_pic_url, logo_url=logo_url)
+            elif user.theme=="Minimalist":
+                return render_template("bus_card_min.html", user=user, logged_in=logged_in, qr_img=qr_encoded.decode('utf-8'), work1_url=work1_url, work2_url=work2_url, work3_url=work3_url, work4_url=work4_url, work5_url=work5_url, profile_pic_url=profile_pic_url, logo_url=logo_url)                
             else:
-                return render_template("bus_card_drama.html", user=user, logged_in=logged_in, qr_img=qr_encoded.decode('utf-8'), work1_url=work1_url, work2_url=work2_url, work3_url=work3_url, work4_url=work4_url, work5_url=work5_url, profile_pic_url=profile_pic_url, logo_url=logo_url)
+                return render_template("bus_card_mag.html", user=user, logged_in=logged_in, qr_img=qr_encoded.decode('utf-8'), work1_url=work1_url, work2_url=work2_url, work3_url=work3_url, work4_url=work4_url, work5_url=work5_url, profile_pic_url=profile_pic_url, logo_url=logo_url)
     
         else:
             return render_template("no_user_found.html", qr_img=qr_encoded.decode('utf-8'))
