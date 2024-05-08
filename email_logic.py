@@ -4,8 +4,8 @@ import smtplib
 import os 
 
 #TODO add to environment variables, get business email
-my_email = "jackmail07@gmail.com"
-password= "pmqxxxifsbshkyfr"
+my_email = os.environ.get("MY_EMAIL")
+password= os.environ.get("MY_EMAIL_PASSWORD")
 
 # SEND EMAIL FOR FORGOT PASSWORD FLOW, SENDING TEMPORARY PASSWORD
 def email_temp_password(user):
