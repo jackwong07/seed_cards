@@ -3,10 +3,13 @@
 
 </head>
 
-<body class="magazine">
+
+<body class="magazine_temp light">
 
 <div class = "container-fluid col-12 col-sm-8 col-lg-6 justify-content-between">
-  {% include "menu_card.html" %}
+
+<!-- Authenticated Menu -->
+{% include "menu_card.html" %}
 
 
 {% with messages = get_flashed_messages() %}

@@ -45,21 +45,21 @@
 
 
 <!-- Company, Location, Logo -->
-<div class="d-flex justify-content-left">
+<div class="d-flex justify-content-center">
   <div class="align-content-center">
+    <p style="font-size: 14pt; margin-bottom:0em">
     {%if logo_url %}
-    <img  id="min-logo-img" src= '{{logo_url}}'></img>
+      <img  id="min-logo-img" src= '{{logo_url}}'></img>
     {%endif %}
-    </div>
+      {% if user.company %}
+    {{user.company}}</p>
+    {% endif %}
+  </div>
  
   <div>
-<p style="font-size: 14pt; margin-bottom:0em">
-  {% if user.company %}
-    {{user.company}}</p>
-  {% endif %}
   {% if user.website_link %}
-<a href="{{user.website_link}}" class="card-link min-temp" style="font-size: 10pt">{{user.website_link}}</a>
-{% endif %}  
+    <a href="{{user.website_link}}" class="card-link min-temp" style="font-size: 10pt">{{user.website_link}}</a>
+  {% endif %}  
 </div>
 
 </div>

@@ -18,6 +18,7 @@ from botocore.client import Config
 import stripe
 import json
 from email_logic import *
+from datetime import timedelta
 
 
 
@@ -25,6 +26,7 @@ from email_logic import *
 app = Flask(__name__, template_folder='templates')
 #TODO: set as environment variable 
 app.config['SECRET_KEY'] = "p$0s#9nfb0E48Q3W049*@B"
+app.config['PERMANENT_SESSION_LIFETIME'] =  timedelta(minutes=60)
 bootstrap = Bootstrap4(app)
 app.config['MAX_CONTENT_LENGTH'] = 16 * 1024 * 1024
 

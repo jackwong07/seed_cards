@@ -88,7 +88,7 @@ def email_cancellation_success(user):
         
         
 def email_contact_form(contact_name, contact_email, contact_message):       
-    contact_name = contact_name, contact_email
+    contact_name = contact_name
     contact_email = contact_email
     contact_message = contact_message
     with smtplib.SMTP("smtp.gmail.com") as connection:
