@@ -38,7 +38,7 @@ class Base(DeclarativeBase):
     pass
 #configure sQLite database, relative to the app instance folder
 #TODO: set as environment variable 
-app.config['SQLALCHEMY_DATABASE_URI'] = "sqlite:///business-cards.db"
+app.config['SQLALCHEMY_DATABASE_URI'] = os.environ.get("DB_URI", "sqlite:///business-cards.db") 
 #create the extension
 db = SQLAlchemy(model_class=Base)
 # initialize the app with the extension
