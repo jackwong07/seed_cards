@@ -38,8 +38,7 @@ class LogInForm(FlaskForm):
 
 
 class EditCardForm(FlaskForm):
-    theme = SelectField(label="Theme", choices=[('Minimalist'), ('Artist'), ('Magazine'), ('Drama')])
-    colors = SelectField(label="Colors", choices=[('Light'), ('Dark'), ('Soft')])
+    theme = SelectField(label="Theme", choices=[('Magazine'), ('Minimalist'), ('Drama')])
     name = StringField(label='Name')
     job_title = StringField(label='Job Title')
     headline_description = CKEditorField(label='Short Headline Description')

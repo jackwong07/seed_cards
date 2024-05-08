@@ -2,7 +2,7 @@ Dear [NAME],
 
 Sorry to see you go, but we appreciate your support to Seed Cards. 
 
-Your information will be fully removed from our database for your privacy after your billing cycle ends. You will be able to use your card fully up until that point.
+Your information will be fully removed from our database for your privacy.
 http://127.0.0.1:5000/card/[URL_PATH]
 
 Because we are removing your data, you will need to go through the full registration process if you want to create a card with us again.

@@ -38,7 +38,7 @@ class Base(DeclarativeBase):
     pass
 #configure sQLite database, relative to the app instance folder
 #TODO: set as environment variable 
-app.config['SQLALCHEMY_DATABASE_URI'] = os.environ.get("DB_URI", "sqlite:///business-cards.db")
+app.config['SQLALCHEMY_DATABASE_URI'] = "sqlite:///business-cards.db"
 #create the extension
 db = SQLAlchemy(model_class=Base)
 # initialize the app with the extension
@@ -345,7 +345,7 @@ def payment_success():
     login_user(new_user)
     
     email_registraion_success(current_user)
-    flash(message="Payment Successful! Click Edit Card and Edit Images to customize your digital business card.")
+    flash(message="Successfully created account! Click Edit Card and Edit Images in the top right menu to customize your digital business card.")
     return redirect(url_for('card', url_path=current_user.url_path))
 
 
@@ -466,7 +466,10 @@ def card(url_path):
                 work5_url = None  
                 
             # PASS LOGGED_IN FLAG TO SHOW MENU IF USER IS AUTHENTICATED
-            logged_in = logged_in_status(current_user)
+            if current_user == user:
+                logged_in = logged_in_status(current_user)
+            else:
+                logged_in = False
             
             if user.theme=="Magazine":            
                 return render_template("bus_card_mag.html", user=user, logged_in=logged_in, qr_img=qr_encoded.decode('utf-8'), work1_url=work1_url, work2_url=work2_url, work3_url=work3_url, work4_url=work4_url, work5_url=work5_url, profile_pic_url=profile_pic_url, logo_url=logo_url)
@@ -519,8 +522,25 @@ def edit_account(url_path):
 @app.route('/card/cancel-account')
 @login_required
 def cancel_account():
+    #TODO remove S3 removal and delete user when adding stripe webhook back. Keep the email function
+    # REMOVE S3 IMAGES
+    bucket = s3_resource.Bucket(BUCKET_NAME)
+    aws_files = [item.key for item in bucket.objects.all()]
+    files_to_delete = [aws_file for aws_file in aws_files if aws_file.startswith(f"{current_user.url_path}_")]
+    print(f"Files: {len(aws_files)}")
+    print(f"Files to Delete: {len(files_to_delete)}")
+    print(f"{files_to_delete[0]}")
+    counter = 0
+    for file_to_delete in files_to_delete:
+        counter = counter+1
+        print(f"Deleting file {file_to_delete} - {counter} of {len(files_to_delete)}")
+        s3.delete_object(Bucket=BUCKET_NAME, Key=file_to_delete)
+    print("Listened for account subscription deleted")
+
     email_cancellation_success(current_user)
-    flash("Account cancelled. You will have access until the end of you bill month. Thank you for your support.")
+    db.session.delete(current_user)
+    db.session.commit()
+    flash("Account cancelled. Thank you for your support.")
     return redirect(url_for('card', url_path=current_user.url_path))
 
 
@@ -684,4 +704,4 @@ def edit_images(url_path):
     return render_template("edit_images.html", user=current_user, logged_in=logged_in, profile_pic_url=profile_pic_url, work1_url=work1_url, work2_url=work2_url,  work3_url=work3_url,  work4_url=work4_url, work5_url=work5_url, logo_url=logo_url)  
 
 if __name__ == "__main__":
-    app.run(debug=False)
+    app.run(debug=True)
