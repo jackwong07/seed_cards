@@ -64,8 +64,9 @@
 
 </div>
 
+{% if user.headline_description %}
 <p class="card-text text-start"><small>{{user.headline_description| safe}}</small></p>
-
+{% endif %}
 
 <!-- Social media -->
 <div class="card-body">
@@ -165,11 +166,12 @@
 
 
 <!-- Description -->
+{% if user.body%}
 <hr class="min-temp"/>
 <div>
     <p class="body-text card-text text-start" style="color:black">{{user.body | safe}}</p>
   </div>
-
+{% endif %}
   
 <!-- Footer -->
   <hr>

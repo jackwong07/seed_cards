@@ -55,7 +55,9 @@
         {% endif %}
         </p>
 
+        {% if user.headline_description %}
       <p class="card-text text-start"><small>{{user.headline_description| safe}}</small></p>
+{% endif %}
       {% if user.website_link %}
       <a href="{{user.website_link}}" class="card-link" style="font-size: 14pt">{{user.website_link}}</a>
     {%endif %}
@@ -163,10 +165,11 @@
 
 
 <!-- Description -->
+{% if user.body%}
   <div>
     <p class="body-text magazine_temp card-text text-start" style="color:black">{{user.body | safe}}</p>
   </div>
-
+{% endif %}
   
 
 <!-- Footer -->
