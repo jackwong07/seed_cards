@@ -704,4 +704,4 @@ def edit_images(url_path):
     return render_template("edit_images.html", user=current_user, logged_in=logged_in, profile_pic_url=profile_pic_url, work1_url=work1_url, work2_url=work2_url,  work3_url=work3_url,  work4_url=work4_url, work5_url=work5_url, logo_url=logo_url)  
 
 if __name__ == "__main__":
-    app.run(debug=True)
+    app.run(debug=False)
