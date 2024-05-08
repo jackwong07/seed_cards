@@ -87,8 +87,9 @@
 
 <!-- Email, Phone -->
 <div class="">
+  {% if user.displayed_email%}
       <a href="mailto: {{user.displayed_email}}" class="card-link min-temp" style="font-size: 14pt">{{user.displayed_email}}</a>          
-      
+      {% endif %}
       {% if user.phone %}
       <p class="card-text text-start col-6"style="font-size: 14pt">+1 {{user.phone}}</p>
     {% endif %}
