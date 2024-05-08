@@ -25,7 +25,7 @@ from datetime import timedelta
 #CREATE AND INITIALIZE FLASK APP
 app = Flask(__name__, template_folder='templates')
 #TODO: set as environment variable 
-app.config['SECRET_KEY'] = "p$0s#9nfb0E48Q3W049*@B"
+app.config['SECRET_KEY'] = os.environ.get("SECRET_KEY")
 app.config['PERMANENT_SESSION_LIFETIME'] =  timedelta(minutes=60)
 bootstrap = Bootstrap4(app)
 app.config['MAX_CONTENT_LENGTH'] = 16 * 1024 * 1024
@@ -38,7 +38,7 @@ class Base(DeclarativeBase):
     pass
 #configure sQLite database, relative to the app instance folder
 #TODO: set as environment variable 
-app.config['SQLALCHEMY_DATABASE_URI'] = "sqlite:///business-cards.db" 
+app.config['SQLALCHEMY_DATABASE_URI'] = os.environ.get("DB_URI", "sqlite:///business-cards.db")
 #create the extension
 db = SQLAlchemy(model_class=Base)
 # initialize the app with the extension
@@ -118,8 +118,8 @@ def logged_in_status(current_user):
 
 # AWS S3 Bucket Initialization and Connection and save
 #TODO: set as environment variable 
-aws_access_key_id = "AKIA6GBMF7OV5N6SKCW2"
-aws_secret_access_key = "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"
+aws_access_key_id = os.environ.get("AWS_ACCESS_KEY")
+aws_secret_access_key = os.environ.get("AWS_SECRET_ACCESS_KEY")
 BUCKET_NAME = "digibusiness-card-bucket"
 
 s3 = boto3.client('s3',
@@ -157,10 +157,10 @@ def save_to_s3(image, url_path, s3_name):
 # STRIPE SETUP
 #TODO: set as environment variable 
 stripe_keys = {
-    "secret_key": "sk_test_51PB3m7FCnvuCuyrQiLhgCTOkCY1faz4U2hcxzJyzVDsBC669XuJg69nnvbNfFHnhe6KTXXbOdyyYrJxBZzx4173G00fcC9O1VM",
-    "publishable_key": "pk_test_51PB3m7FCnvuCuyrQElzMQQT6F4nSdp94KTv773qyrcJlyVsG5nB7U4nUNM1N7FJEObJkgSLBMZQC5s5MFrCojOQb00pAkpEXhb",
-    "price_id": "price_1PBK7IFCnvuCuyrQyzSzN2Fq",
-    "endpoint_secret": "whsec_400ab6ec419190e2a8b0ebbed214579a0cda0285715cbc30046ec84fafbc41d6",
+    "secret_key": os.environ.get("STRIPE_SECRET_KEY"),
+    "publishable_key": os.environ.get("STRIPE_PUBLISHABLE_KEY"),
+    "price_id": os.environ.get("STRIPE_PRICE_ID"),
+    "endpoint_secret": os.environ.get("STRIPE_ENDPOINT_SECRET"),
 }
 stripe.api_key = stripe_keys["secret_key"]
 
@@ -225,8 +225,7 @@ def register():
             session["new_user_hashed_password"] = generate_password_hash(request.form.get('password'), method='pbkdf2:sha256', salt_length=8)
             session["new_user_name"] = request.form["name"]
             session["new_user_job_title"] = request.form["job_title"]
-            print(session["new_user_name"])
-            return redirect(url_for('payment'))
+            return redirect(url_for('payment_success'))
     logged_in = logged_in_status(current_user)
     return render_template("register.html", signup_form=signup_form, logged_in=logged_in)
 
@@ -327,23 +326,23 @@ def stripe_webhook():
 
 @app.route('/payment-success')
 def payment_success():
-    print(session["stripe_session_id"])
-    print(request.args.get('session_id'))
-    result = db.session.execute(db.select(User).where(User.stripe_session_id == session["stripe_session_id"]))
-    user = result.scalar()
-    print(user)
+    # result = db.session.execute(db.select(User).where(User.stripe_session_id == session["stripe_session_id"]))
+    # user = result.scalar()
     # CREATE NEW USER
-    user.email = session["new_user_email"]
-    user.password = session["new_user_hashed_password"]
-    user.url_path = session["new_user_url_path"]
-    user.name = session["new_user_name"]
-    user.job_title = session["new_user_job_title"]
-    user.payment = True
-    user.theme="magazine"
-    user.colors="light"
-    user.headline_description="Lorem ipsum dolor sit amet, consectetur adipiscing elit, sed do eiusmod tempor incididunt ut labore et dolore magna aliqua. Ut enim ad minim veniam, quis nostrud exercitation ullamco laboris nisi ut aliquip ex ea commodo consequat."
+    new_user = User(
+        email = session["new_user_email"],
+        password = session["new_user_hashed_password"],
+        url_path = session["new_user_url_path"],
+        name = session["new_user_name"],
+        job_title = session["new_user_job_title"],
+        payment = True,
+        theme="magazine",
+        colors="light",
+        headline_description="Lorem ipsum dolor sit amet, consectetur adipiscing elit, sed do eiusmod tempor incididunt ut labore et dolore magna aliqua. Ut enim ad minim veniam, quis nostrud exercitation ullamco laboris nisi ut aliquip ex ea commodo consequat.",
+    )
+    db.session.add(new_user)
     db.session.commit()
-    login_user(user)
+    login_user(new_user)
     
     email_registraion_success(current_user)
     flash(message="Payment Successful! Click Edit Card and Edit Images to customize your digital business card.")
@@ -685,4 +684,4 @@ def edit_images(url_path):
     return render_template("edit_images.html", user=current_user, logged_in=logged_in, profile_pic_url=profile_pic_url, work1_url=work1_url, work2_url=work2_url,  work3_url=work3_url,  work4_url=work4_url, work5_url=work5_url, logo_url=logo_url)  
 
 if __name__ == "__main__":
-    app.run(debug=True)
+    app.run(debug=False)
