@@ -202,7 +202,7 @@ def home():
     return render_template("index.html", logged_in=logged_in, current_user=current_user)
 
 # SIGN UP
-@app.route('/register', methods=["GET","POST"])
+@app.route('/register', methods=["POST"])
 def register():
     signup_form = SignupForm()
     if request.method=="POST" and signup_form.validate_on_submit():
