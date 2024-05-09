@@ -341,9 +341,9 @@ def payment_success():
     )
     db.session.add(new_user)
     db.session.commit()
-    login_user(new_user)
+    #login_user(new_user)
     
-    email_registration_success(current_user)
+    email_registration_success(new_user)
     flash(message="Successfully created account! Click Edit Card and Edit Images in the top right menu to customize your digital business card.")
     return redirect(url_for('card', url_path=current_user.url_path))
 
