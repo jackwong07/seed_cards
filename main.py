@@ -337,7 +337,7 @@ def payment_success():
         job_title = session["new_user_job_title"],
         payment = True,
         theme="magazine",
-        colors="light",
+        #colors="light",
         headline_description="Lorem ipsum dolor sit amet, consectetur adipiscing elit, sed do eiusmod tempor incididunt ut labore et dolore magna aliqua. Ut enim ad minim veniam, quis nostrud exercitation ullamco laboris nisi ut aliquip ex ea commodo consequat.",
     )
     db.session.add(new_user)
@@ -554,7 +554,7 @@ def edit_card(url_path):
     # SHOW EXISTING DATA
     if current_user.is_authenticated and current_user.url_path == user.url_path:
         edit_card_form.theme.data = current_user.theme
-        edit_card_form.colors.data = current_user.colors
+        #edit_card_form.colors.data = current_user.colors
         edit_card_form.name.data = current_user.name
         edit_card_form.job_title.data = current_user.job_title
         edit_card_form.headline_description.data = current_user.headline_description
@@ -582,7 +582,7 @@ def edit_card(url_path):
         # POPULATE WITH NEW DATA
         if request.method=="POST":   
             current_user.theme = request.form.get('theme')
-            current_user.colors = request.form.get('colors')
+            #current_user.colors = request.form.get('colors')
             current_user.name = request.form.get('name')
             current_user.job_title = request.form.get('job_title')
             current_user.headline_description = request.form.get('headline_description')
