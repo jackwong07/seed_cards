@@ -38,7 +38,7 @@ def email_temp_password(user):
 
 
 # SEND EMAIL FOR REGISTRATION
-def email_registraion_success(user):
+def email_registration_success(user):
     with open(f"emails/registration_success.txt", mode='r') as template:
         content = template.read()
         content = content.replace("[NAME]", user.name)
