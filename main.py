@@ -327,6 +327,7 @@ def stripe_webhook():
 def payment_success():
     # result = db.session.execute(db.select(User).where(User.stripe_session_id == session["stripe_session_id"]))
     # user = result.scalar()
+    print(session["new_user_url_path"])
     # CREATE NEW USER
     new_user = User(
         email = session["new_user_email"],
@@ -339,13 +340,17 @@ def payment_success():
         #colors="light",
         headline_description="Lorem ipsum dolor sit amet, consectetur adipiscing elit, sed do eiusmod tempor incididunt ut labore et dolore magna aliqua. Ut enim ad minim veniam, quis nostrud exercitation ullamco laboris nisi ut aliquip ex ea commodo consequat.",
     )
+    print("new user set")
+    print(new_user.email)
     db.session.add(new_user)
+    print("new user added")
     db.session.commit()
+    print("new user committed")
     #login_user(new_user)
     
     email_registration_success(new_user)
     flash(message="Successfully created account! Click Edit Card and Edit Images in the top right menu to customize your digital business card.")
-    return redirect(url_for('card', url_path=current_user.url_path))
+    return redirect(url_for('card', url_path=new_user.url_path))
 
 
 
