@@ -524,18 +524,18 @@ def edit_account(url_path):
 def cancel_account():
     #TODO remove S3 removal and delete user when adding stripe webhook back. Keep the email function
     # REMOVE S3 IMAGES
-    # bucket = s3_resource.Bucket(BUCKET_NAME)
-    # aws_files = [item.key for item in bucket.objects.all()]
-    # files_to_delete = [aws_file for aws_file in aws_files if aws_file.startswith(f"{current_user.url_path}_")]
-    # print(f"Files: {len(aws_files)}")
-    # print(f"Files to Delete: {len(files_to_delete)}")
-    # print(f"{files_to_delete[0]}")
-    # counter = 0
-    # for file_to_delete in files_to_delete:
-    #     counter = counter+1
-    #     print(f"Deleting file {file_to_delete} - {counter} of {len(files_to_delete)}")
-    #     s3.delete_object(Bucket=BUCKET_NAME, Key=file_to_delete)
-    # print("Listened for account subscription deleted")
+    bucket = s3_resource.Bucket(BUCKET_NAME)
+    aws_files = [item.key for item in bucket.objects.all()]
+    files_to_delete = [aws_file for aws_file in aws_files if aws_file.startswith(f"{current_user.url_path}_")]
+    print(f"Files: {len(aws_files)}")
+    print(f"Files to Delete: {len(files_to_delete)}")
+    print(f"{files_to_delete[0]}")
+    counter = 0
+    for file_to_delete in files_to_delete:
+        counter = counter+1
+        print(f"Deleting file {file_to_delete} - {counter} of {len(files_to_delete)}")
+        s3.delete_object(Bucket=BUCKET_NAME, Key=file_to_delete)
+    print("Listened for account subscription deleted")
 
     email_cancellation_success(current_user)
     db.session.delete(current_user)
