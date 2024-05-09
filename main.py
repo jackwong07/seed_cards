@@ -30,7 +30,6 @@ app.config['PERMANENT_SESSION_LIFETIME'] =  timedelta(minutes=60)
 bootstrap = Bootstrap4(app)
 app.config['MAX_CONTENT_LENGTH'] = 16 * 1024 * 1024
 
-YOUR_DOMAIN = 'http://localhost:5000'
 
 
 #CREATE DATABASE
@@ -336,7 +335,7 @@ def payment_success():
         name = session["new_user_name"],
         job_title = session["new_user_job_title"],
         payment = True,
-        theme="magazine",
+        theme="Magazine",
         #colors="light",
         headline_description="Lorem ipsum dolor sit amet, consectetur adipiscing elit, sed do eiusmod tempor incididunt ut labore et dolore magna aliqua. Ut enim ad minim veniam, quis nostrud exercitation ullamco laboris nisi ut aliquip ex ea commodo consequat.",
     )
@@ -413,7 +412,7 @@ def card(url_path):
     # GENERATE QR CODE
     qr = qrcode.QRCode(version=3, box_size=5, border=5, error_correction=qrcode.constants.ERROR_CORRECT_H)
     # TODO change link after deploying
-    qr_link = f"http://127.0.0.1:5000/card/{url_path}"
+    qr_link = f"https://seed-cards.onrender.com/card/{url_path}"
     qr.add_data(qr_link)
     qr.make(fit=True)
     qr_img = qr.make_image(fill_color="black", back_color="white")
