@@ -224,7 +224,27 @@ def register():
             session["new_user_hashed_password"] = generate_password_hash(request.form.get('password'), method='pbkdf2:sha256', salt_length=8)
             session["new_user_name"] = request.form["name"]
             session["new_user_job_title"] = request.form["job_title"]
-            return redirect(url_for('payment_success'))
+            new_user = User(
+                    email = session["new_user_email"],
+                    password = session["new_user_hashed_password"],
+                    url_path = session["new_user_url_path"],
+                    name = session["new_user_name"],
+                    job_title = session["new_user_job_title"],
+                    payment = True,
+                    theme="Magazine",
+                    #colors="light",
+                    headline_description="Lorem ipsum dolor sit amet, consectetur adipiscing elit, sed do eiusmod tempor incididunt ut labore et dolore magna aliqua. Ut enim ad minim veniam, quis nostrud exercitation ullamco laboris nisi ut aliquip ex ea commodo consequat.",
+                )
+            print("new user set")
+            print(new_user.email)
+            db.session.add(new_user)
+            print("new user added")
+            db.session.commit()
+            print("new user committed")
+            email_registration_success(new_user)
+            login_user(new_user)           
+            
+            return redirect(url_for('card', url_path=new_user.url_path))
     logged_in = logged_in_status(current_user)
     return render_template("register.html", signup_form=signup_form, logged_in=logged_in)
 
