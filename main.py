@@ -1,30 +1,30 @@
+from botocore.client import Config
+from datetime import timedelta
+from email_logic import *
 from flask import Flask, jsonify, render_template, redirect, url_for, request, session, send_file, flash
-import os
 from flask_bootstrap import Bootstrap4
+from flask_ckeditor import CKEditor
+from flask_login import UserMixin, login_user, LoginManager, login_required, current_user, logout_user
 from flask_sqlalchemy import SQLAlchemy
-from sqlalchemy.orm import DeclarativeBase, Mapped, mapped_column, relationship
+from forms import SignupForm, EditAccountForm, EditCardForm, PaymentForm, LogInForm, VCard, EditImagesForm, ForgotPasswordForm
+from PIL import Image
 from sqlalchemy import and_, or_, Integer, String, Float, Boolean, Text, ForeignKey, desc
+from sqlalchemy.orm import DeclarativeBase, Mapped, mapped_column, relationship
 from werkzeug.security import generate_password_hash, check_password_hash
 from werkzeug.utils import secure_filename
-from flask_login import UserMixin, login_user, LoginManager, login_required, current_user, logout_user
-from forms import SignupForm, EditAccountForm, EditCardForm, PaymentForm, LogInForm, VCard, EditImagesForm, ForgotPasswordForm
-from flask_ckeditor import CKEditor
-from PIL import Image
-import qrcode
-import io
 import base64
 import boto3
-from botocore.client import Config
-import stripe
+import io
 import json
-from email_logic import *
-from datetime import timedelta
+import os
+import qrcode
+import stripe
 
 
 
 #CREATE AND INITIALIZE FLASK APP
 app = Flask(__name__, template_folder='templates')
-#TODO: set as environment variable 
+#TODO: set as environment variable
 app.config['SECRET_KEY'] = os.environ.get("SECRET_KEY")
 app.config['PERMANENT_SESSION_LIFETIME'] =  timedelta(minutes=60)
 bootstrap = Bootstrap4(app)
@@ -36,8 +36,8 @@ app.config['MAX_CONTENT_LENGTH'] = 16 * 1024 * 1024
 class Base(DeclarativeBase):
     pass
 #configure sQLite database, relative to the app instance folder
-#TODO: set as environment variable 
-app.config['SQLALCHEMY_DATABASE_URI'] = os.environ.get("DB_URI", "sqlite:///business-cards.db") 
+#TODO: set as environment variable
+app.config['SQLALCHEMY_DATABASE_URI'] = os.environ.get("DB_URI", "sqlite:///business-cards.db")
 #create the extension
 db = SQLAlchemy(model_class=Base)
 # initialize the app with the extension
@@ -54,7 +54,7 @@ class User(db.Model, UserMixin):
     email: Mapped[str] = mapped_column(String(250), unique=True, nullable=True)
     password: Mapped[str] = mapped_column(String(250), nullable=True)
     theme: Mapped[str] = mapped_column(String(250), nullable=True)
-    colors: Mapped[str] = mapped_column(String(250), nullable=True)    
+    colors: Mapped[str] = mapped_column(String(250), nullable=True)
     name: Mapped[str] = mapped_column(String(250), nullable=True)
     job_title: Mapped[str] = mapped_column(String(250), nullable=True)
     profile_pic: Mapped[str] = mapped_column(String(250), nullable=True)
@@ -79,8 +79,8 @@ class User(db.Model, UserMixin):
     work2: Mapped[str] = mapped_column(String(250), nullable=True)
     work3: Mapped[str] = mapped_column(String(250), nullable=True)
     work4: Mapped[str] = mapped_column(String(250), nullable=True)
-    work5: Mapped[str] = mapped_column(String(250), nullable=True)    
-    body: Mapped[str] = mapped_column(Text, nullable=True)    
+    work5: Mapped[str] = mapped_column(String(250), nullable=True)
+    body: Mapped[str] = mapped_column(Text, nullable=True)
     payment: Mapped[bool] = mapped_column(Boolean, nullable=True)
     stripe_session_id: Mapped[str] = mapped_column(String(250), nullable=True, unique=True)
     stripe_customer_id: Mapped[str] = mapped_column(String(250), nullable=True)
@@ -89,7 +89,7 @@ class User(db.Model, UserMixin):
 
     def __repr__(self):
         return f"<User {self.name}>"
-    
+
     def get_id(self):
            return (self.id)
 
@@ -116,7 +116,7 @@ def logged_in_status(current_user):
     return logged_in
 
 # AWS S3 Bucket Initialization and Connection and save
-#TODO: set as environment variable 
+#TODO: set as environment variable
 aws_access_key_id = os.environ.get("AWS_ACCESS_KEY")
 aws_secret_access_key = os.environ.get("AWS_SECRET_ACCESS_KEY")
 BUCKET_NAME = "digibusiness-card-bucket"
@@ -150,11 +150,11 @@ def save_to_s3(image, url_path, s3_name):
     s3.put_object(
         Bucket=BUCKET_NAME,
         Key=f"{url_path}_{s3_name}",
-        Body=buffer)  
+        Body=buffer)
 
 
 # STRIPE SETUP
-#TODO: set as environment variable 
+#TODO: set as environment variable
 stripe_keys = {
     "secret_key": os.environ.get("STRIPE_SECRET_KEY"),
     "publishable_key": os.environ.get("STRIPE_PUBLISHABLE_KEY"),
@@ -191,7 +191,7 @@ def home():
     session.pop('_flashes', None)
     # PASS LOGGED_IN FLAG TO SHOW MENU IF USER IS AUTHENTICATED
     logged_in = logged_in_status(current_user)
-    
+
     # CONTACT FORM
     if request.method=="POST":
         contact_name = request.form['name']
@@ -242,8 +242,8 @@ def register():
             db.session.commit()
             print("new user committed")
             email_registration_success(new_user)
-            login_user(new_user)           
-            
+            login_user(new_user)
+
             return redirect(url_for('card', url_path=new_user.url_path))
     logged_in = logged_in_status(current_user)
     return render_template("register.html", signup_form=signup_form, logged_in=logged_in)
@@ -278,7 +278,7 @@ def payment():
 def stripe_webhook():
     event = None
     payload = request.data
-    
+
     try:
         event = json.loads(payload)
     except json.decoder.JSONDecodeError as e:
@@ -303,7 +303,7 @@ def stripe_webhook():
         session_id = event['data']['object']['id']
         payment_status = event['data']['object']['payment_status']
         if payment_status=="paid":
-            print("Checkout complete, paid.")            
+            print("Checkout complete, paid.")
             new_user = User(
                 stripe_customer_id = customer_id,
                 stripe_subscription_id = subscription_id,
@@ -311,19 +311,19 @@ def stripe_webhook():
                 stripe_payment_status = payment_status,
                 )
             db.session.add(new_user)
-            db.session.commit() 
+            db.session.commit()
         else:
             return "Error with payment"
     if event['type']=="customer.subscription.deleted":
         cancelled_customer_id = event['data']['object']['customer']
         # cancelled_subscription_id = event['data']['object']['id']
-        # cancelled_payment_status = event['data']['object']['status']        
+        # cancelled_payment_status = event['data']['object']['status']
         # DELETE FROM DATABASE AFTER STRIPE SENDS SUBSCRIPTION DELETED
         result = db.session.execute(db.select(User).where(and_(User.stripe_customer_id==cancelled_customer_id)))
         user = result.scalar()
         db.session.delete(user)
         db.session.commit()
-        
+
         # REMOVE S3 IMAGES
         bucket = s3_resource.Bucket(BUCKET_NAME)
         aws_files = [item.key for item in bucket.objects.all()]
@@ -367,7 +367,7 @@ def payment_success():
     db.session.commit()
     print("new user committed")
     #login_user(new_user)
-    
+
     email_registration_success(new_user)
     flash(message="Successfully created account! Click Edit Card and Edit Images in the top right menu to customize your digital business card.")
     return redirect(url_for('card', url_path=new_user.url_path))
@@ -391,7 +391,7 @@ def login():
                 if check_password_hash(user.password, form_password):
                     login_user(user)
                     flash("Logged in successfully")
-                    return redirect(url_for('card', url_path=current_user.url_path))            
+                    return redirect(url_for('card', url_path=current_user.url_path))
                 else:
                     flash("Password is incorrect")
             else:
@@ -447,22 +447,22 @@ def card(url_path):
     buffer.truncate(0)
     qr_img.save(buffer, format="png")
     qr_encoded = base64.b64encode(buffer.getvalue())
-    
+
     if user:
         if user.payment==True:
-           
+
             # GRAB IMAGES FROM S3
             # PROFILE PIC
             if user.profile_pic and user.profile_pic!="":
                 profile_pic_url = s3.generate_presigned_url("get_object", Params={"Bucket": BUCKET_NAME, "Key": f"{url_path}_{user.profile_pic}"}, ExpiresIn=30)
             else:
                 profile_pic_url = None
-                
+
             if user.logo and user.logo!="":
                 logo_url = s3.generate_presigned_url("get_object", Params={"Bucket": BUCKET_NAME, "Key": f"{url_path}_{user.logo}"}, ExpiresIn=30)
             else:
                 logo_url = None
-            
+
             # # WORKS
             if user.work1 and user.work1!="":
                 work1_url = s3.generate_presigned_url("get_object", Params={"Bucket": BUCKET_NAME, "Key": f"{url_path}_{user.work1}"}, ExpiresIn=30)
@@ -473,37 +473,37 @@ def card(url_path):
                 work2_url = s3.generate_presigned_url("get_object", Params={"Bucket": BUCKET_NAME, "Key": f"{url_path}_{user.work2}"}, ExpiresIn=30)
             else:
                 work2_url = None
-            
+
             if user.work3 and user.work1!="":
                 work3_url = s3.generate_presigned_url("get_object", Params={"Bucket": BUCKET_NAME, "Key": f"{url_path}_{user.work3}"}, ExpiresIn=30)
             else:
-                work3_url = None  
-                
+                work3_url = None
+
             if user.work4 and user.work1!="":
                 work4_url = s3.generate_presigned_url("get_object", Params={"Bucket": BUCKET_NAME, "Key": f"{url_path}_{user.work4}"}, ExpiresIn=30)
             else:
-                work4_url = None  
-            
+                work4_url = None
+
             if user.work5 and user.work1!="":
                 work5_url = s3.generate_presigned_url("get_object", Params={"Bucket": BUCKET_NAME, "Key": f"{url_path}_{user.work5}"}, ExpiresIn=30)
             else:
-                work5_url = None  
-                
+                work5_url = None
+
             # PASS LOGGED_IN FLAG TO SHOW MENU IF USER IS AUTHENTICATED
             if current_user == user:
                 logged_in = logged_in_status(current_user)
             else:
                 logged_in = False
-            
-            if user.theme=="Magazine":            
+
+            if user.theme=="Magazine":
                 return render_template("bus_card_mag.html", user=user, logged_in=logged_in, qr_img=qr_encoded.decode('utf-8'), work1_url=work1_url, work2_url=work2_url, work3_url=work3_url, work4_url=work4_url, work5_url=work5_url, profile_pic_url=profile_pic_url, logo_url=logo_url)
             elif user.theme=="Drama":
                 return render_template("bus_card_drama.html", user=user, logged_in=logged_in, qr_img=qr_encoded.decode('utf-8'), work1_url=work1_url, work2_url=work2_url, work3_url=work3_url, work4_url=work4_url, work5_url=work5_url, profile_pic_url=profile_pic_url, logo_url=logo_url)
             elif user.theme=="Minimalist":
-                return render_template("bus_card_min.html", user=user, logged_in=logged_in, qr_img=qr_encoded.decode('utf-8'), work1_url=work1_url, work2_url=work2_url, work3_url=work3_url, work4_url=work4_url, work5_url=work5_url, profile_pic_url=profile_pic_url, logo_url=logo_url)                
+                return render_template("bus_card_min.html", user=user, logged_in=logged_in, qr_img=qr_encoded.decode('utf-8'), work1_url=work1_url, work2_url=work2_url, work3_url=work3_url, work4_url=work4_url, work5_url=work5_url, profile_pic_url=profile_pic_url, logo_url=logo_url)
             else:
                 return render_template("bus_card_mag.html", user=user, logged_in=logged_in, qr_img=qr_encoded.decode('utf-8'), work1_url=work1_url, work2_url=work2_url, work3_url=work3_url, work4_url=work4_url, work5_url=work5_url, profile_pic_url=profile_pic_url, logo_url=logo_url)
-    
+
         else:
             return render_template("no_user_found.html", qr_img=qr_encoded.decode('utf-8'))
     else:
@@ -521,7 +521,7 @@ def generate_vcf(url_path):
         email = user.displayed_email,
         address = user.location,
         phone = user.phone
-        ) 
+        )
     return send_file(get_vcard(user_vcard), mimetype='text/vcard')
 
 
@@ -539,7 +539,7 @@ def edit_account(url_path):
             if request.form.get("password") != "":
                 current_user.password = generate_password_hash(request.form.get("password"), method='pbkdf2:sha256', salt_length=8)
                 db.session.commit()
-            return redirect(url_for('card', url_path=current_user.url_path))   
+            return redirect(url_for('card', url_path=current_user.url_path))
         return render_template("edit_account.html", user=current_user, logged_in=logged_in)
 
 
@@ -574,7 +574,7 @@ def edit_card(url_path):
     result = db.session.execute(db.select(User).where(User.url_path==url_path))
     user = result.scalar()
     logged_in = logged_in_status(current_user)
-    edit_card_form = EditCardForm() 
+    edit_card_form = EditCardForm()
     # SHOW EXISTING DATA
     if current_user.is_authenticated and current_user.url_path == user.url_path:
         edit_card_form.theme.data = current_user.theme
@@ -596,15 +596,15 @@ def edit_card(url_path):
         edit_card_form.social_link1.data = current_user.social_link1
         edit_card_form.social_link2.data = current_user.social_link2
         edit_card_form.social_link3.data = current_user.social_link3
-        edit_card_form.social_link4.data = current_user.social_link4                
+        edit_card_form.social_link4.data = current_user.social_link4
         edit_card_form.website_link.data = current_user.website_link
         edit_card_form.venmo.data = current_user.venmo
         edit_card_form.stripe.data = current_user.stripe
-        edit_card_form.body.data = current_user.body   
-        
-        
+        edit_card_form.body.data = current_user.body
+
+
         # POPULATE WITH NEW DATA
-        if request.method=="POST":   
+        if request.method=="POST":
             current_user.theme = request.form.get('theme')
             #current_user.colors = request.form.get('colors')
             current_user.name = request.form.get('name')
@@ -621,13 +621,13 @@ def edit_card(url_path):
             current_user.social_link1 = request.form.get('social_link1')
             current_user.social_link2 = request.form.get('social_link2')
             current_user.social_link3 = request.form.get('social_link3')
-            current_user.social_link4  = request.form.get('social_link4')             
+            current_user.social_link4  = request.form.get('social_link4')
             current_user.website_link = request.form.get('website_link')
             current_user.venmo = request.form.get('venmo')
             current_user.stripe = request.form.get('stripe')
             current_user.body = request.form.get('body')
             db.session.commit()
-            return redirect(url_for('card', url_path=current_user.url_path))   
+            return redirect(url_for('card', url_path=current_user.url_path))
         return render_template("edit_card.html", user=current_user, logged_in=logged_in, edit_card_form=edit_card_form)
 
 @app.route('/card/edit-images/<url_path>', methods=["GET","POST"])
@@ -640,92 +640,92 @@ def edit_images(url_path):
     if current_user.is_authenticated and current_user.url_path == user.url_path:
         # SHOW EXISTING PROFILE PIC AND WORKS
         if current_user.profile_pic:
-            profile_pic_url = s3.generate_presigned_url("get_object", Params={"Bucket": BUCKET_NAME, "Key": f"{url_path}_{current_user.profile_pic}"}, ExpiresIn=30)            
+            profile_pic_url = s3.generate_presigned_url("get_object", Params={"Bucket": BUCKET_NAME, "Key": f"{url_path}_{current_user.profile_pic}"}, ExpiresIn=30)
         else:
             profile_pic_url=None
-            
+
         if current_user.logo:
-            logo_url = s3.generate_presigned_url("get_object", Params={"Bucket": BUCKET_NAME, "Key": f"{url_path}_{current_user.logo}"}, ExpiresIn=30)            
+            logo_url = s3.generate_presigned_url("get_object", Params={"Bucket": BUCKET_NAME, "Key": f"{url_path}_{current_user.logo}"}, ExpiresIn=30)
         else:
             logo_url=None
-                    
+
         if current_user.work1:
-            work1_url = s3.generate_presigned_url("get_object", Params={"Bucket": BUCKET_NAME, "Key": f"{url_path}_{current_user.work1}"}, ExpiresIn=30)    
+            work1_url = s3.generate_presigned_url("get_object", Params={"Bucket": BUCKET_NAME, "Key": f"{url_path}_{current_user.work1}"}, ExpiresIn=30)
         else:
             work1_url=None
-            
+
         if current_user.work2:
-            work2_url = s3.generate_presigned_url("get_object", Params={"Bucket": BUCKET_NAME, "Key": f"{url_path}_{current_user.work2}"}, ExpiresIn=30)    
+            work2_url = s3.generate_presigned_url("get_object", Params={"Bucket": BUCKET_NAME, "Key": f"{url_path}_{current_user.work2}"}, ExpiresIn=30)
         else:
             work2_url=None
 
         if current_user.work3:
-            work3_url = s3.generate_presigned_url("get_object", Params={"Bucket": BUCKET_NAME, "Key": f"{url_path}_{current_user.work3}"}, ExpiresIn=30)    
+            work3_url = s3.generate_presigned_url("get_object", Params={"Bucket": BUCKET_NAME, "Key": f"{url_path}_{current_user.work3}"}, ExpiresIn=30)
         else:
             work3_url=None
-            
+
         if current_user.work4:
-            work4_url = s3.generate_presigned_url("get_object", Params={"Bucket": BUCKET_NAME, "Key": f"{url_path}_{current_user.work4}"}, ExpiresIn=30)    
+            work4_url = s3.generate_presigned_url("get_object", Params={"Bucket": BUCKET_NAME, "Key": f"{url_path}_{current_user.work4}"}, ExpiresIn=30)
         else:
             work4_url=None
-            
+
         if current_user.work5:
-            work5_url = s3.generate_presigned_url("get_object", Params={"Bucket": BUCKET_NAME, "Key": f"{url_path}_{current_user.work5}"}, ExpiresIn=30)    
+            work5_url = s3.generate_presigned_url("get_object", Params={"Bucket": BUCKET_NAME, "Key": f"{url_path}_{current_user.work5}"}, ExpiresIn=30)
         else:
             work5_url=None
 
         # UPDATE IMAGE TO S3 AND CHANGE DATABASE FILE NAMES
         if request.method=="POST":
-            
+
             #PROFILE PICTURE
             if request.files["profile"]:
                 profile_pic = request.files["profile"]
                 s3_profile_pic = secure_filename(profile_pic.filename)
-                save_to_s3(profile_pic, url_path, s3_profile_pic)     
+                save_to_s3(profile_pic, url_path, s3_profile_pic)
                 current_user.profile_pic = secure_filename(profile_pic.filename)
-            
+
             # LOGO
             if request.files["logo"]:
                 logo = request.files["logo"]
                 s3_logo = secure_filename(logo.filename)
-                save_to_s3(logo, url_path, s3_logo)     
+                save_to_s3(logo, url_path, s3_logo)
                 current_user.logo = secure_filename(logo.filename)
-            
+
             #WORKS
             if request.files["work1"]:
                 work1 = request.files["work1"]
                 s3_work1 = secure_filename(work1.filename)
-                save_to_s3(work1, url_path, s3_work1)     
+                save_to_s3(work1, url_path, s3_work1)
                 current_user.work1 = secure_filename(work1.filename)
-  
+
             if request.files["work2"]:
                 work2 = request.files["work2"]
                 s3_work2 = secure_filename(work2.filename)
-                save_to_s3(work2, url_path, s3_work2)     
+                save_to_s3(work2, url_path, s3_work2)
                 current_user.work2 = secure_filename(work2.filename)
-                
+
             if request.files["work3"]:
                 work3 = request.files["work3"]
                 s3_work3 = secure_filename(work3.filename)
-                save_to_s3(work3, url_path, s3_work3)     
+                save_to_s3(work3, url_path, s3_work3)
                 current_user.work3 = secure_filename(work3.filename)
- 
+
             if request.files["work4"]:
                 work4 = request.files["work4"]
                 s3_work4 = secure_filename(work4.filename)
-                save_to_s3(work4, url_path, s3_work4)     
+                save_to_s3(work4, url_path, s3_work4)
                 current_user.work4 = secure_filename(work4.filename)
 
 
             if request.files["work5"]:
                 work5 = request.files["work5"]
                 s3_work5 = secure_filename(work5.filename)
-                save_to_s3(work5, url_path, s3_work5)     
+                save_to_s3(work5, url_path, s3_work5)
                 current_user.work5 = secure_filename(work5.filename)
-            
+
             db.session.commit()
-            return redirect(url_for('card', url_path=current_user.url_path))  
-    return render_template("edit_images.html", user=current_user, logged_in=logged_in, profile_pic_url=profile_pic_url, work1_url=work1_url, work2_url=work2_url,  work3_url=work3_url,  work4_url=work4_url, work5_url=work5_url, logo_url=logo_url)  
+            return redirect(url_for('card', url_path=current_user.url_path))
+    return render_template("edit_images.html", user=current_user, logged_in=logged_in, profile_pic_url=profile_pic_url, work1_url=work1_url, work2_url=work2_url,  work3_url=work3_url,  work4_url=work4_url, work5_url=work5_url, logo_url=logo_url)
 
 if __name__ == "__main__":
     app.run(debug=True)
