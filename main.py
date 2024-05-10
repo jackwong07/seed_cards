@@ -1,3 +1,9 @@
+import base64
+import boto3
+import io
+import json
+import os
+import qrcode
 from botocore.client import Config
 from datetime import timedelta
 from email_logic import *
@@ -12,13 +18,7 @@ from sqlalchemy import and_, or_, Integer, String, Float, Boolean, Text, Foreign
 from sqlalchemy.orm import DeclarativeBase, Mapped, mapped_column, relationship
 from werkzeug.security import generate_password_hash, check_password_hash
 from werkzeug.utils import secure_filename
-import base64
-import boto3
-import io
-import json
-import os
-import qrcode
-import stripe
+# import stripe
 
 
 
@@ -37,7 +37,7 @@ class Base(DeclarativeBase):
     pass
 #configure sQLite database, relative to the app instance folder
 #TODO: set as environment variable
-app.config['SQLALCHEMY_DATABASE_URI'] = os.environ.get("DB_URI", "sqlite:///business-cards.db")
+app.config['SQLALCHEMY_DATABASE_URI'] = os.environ.get("POSTGRES_URI")
 #create the extension
 db = SQLAlchemy(model_class=Base)
 # initialize the app with the extension
@@ -155,13 +155,13 @@ def save_to_s3(image, url_path, s3_name):
 
 # STRIPE SETUP
 #TODO: set as environment variable
-stripe_keys = {
-    "secret_key": os.environ.get("STRIPE_SECRET_KEY"),
-    "publishable_key": os.environ.get("STRIPE_PUBLISHABLE_KEY"),
-    "price_id": os.environ.get("STRIPE_PRICE_ID"),
-    "endpoint_secret": os.environ.get("STRIPE_ENDPOINT_SECRET"),
-}
-stripe.api_key = stripe_keys["secret_key"]
+# stripe_keys = {
+#     "secret_key": os.environ.get("STRIPE_SECRET_KEY"),
+#     "publishable_key": os.environ.get("STRIPE_PUBLISHABLE_KEY"),
+#     "price_id": os.environ.get("STRIPE_PRICE_ID"),
+#     "endpoint_secret": os.environ.get("STRIPE_ENDPOINT_SECRET"),
+# }
+# stripe.api_key = stripe_keys["secret_key"]
 
 
 #GENERATE VCF FILE TO SAVE CONTACTS
@@ -202,7 +202,7 @@ def home():
     return render_template("index.html", logged_in=logged_in, current_user=current_user)
 
 # SIGN UP
-@app.route('/register', methods=["POST"])
+@app.route('/register', methods=["GET", "POST"])
 def register():
     signup_form = SignupForm()
     if request.method=="POST" and signup_form.validate_on_submit():
@@ -235,142 +235,146 @@ def register():
                     #colors="light",
                     headline_description="Lorem ipsum dolor sit amet, consectetur adipiscing elit, sed do eiusmod tempor incididunt ut labore et dolore magna aliqua. Ut enim ad minim veniam, quis nostrud exercitation ullamco laboris nisi ut aliquip ex ea commodo consequat.",
                 )
-            print("new user set")
-            print(new_user.email)
-            db.session.add(new_user)
-            print("new user added")
-            db.session.commit()
-            print("new user committed")
-            email_registration_success(new_user)
-            login_user(new_user)
+            try:
+                print("new user set")
+                print(new_user.email)
+                db.session.add(new_user)
+                print("new user added")
+                db.session.commit()
+                print("new user committed")
+                email_registration_success(new_user)
+                login_user(new_user)
 
-            return redirect(url_for('card', url_path=new_user.url_path))
+                return redirect(url_for('card', url_path=new_user.url_path))
+            except Exception as e:
+                print(e.message)
+                raise e
     logged_in = logged_in_status(current_user)
     return render_template("register.html", signup_form=signup_form, logged_in=logged_in)
 
 # STRIPE PAYMENT
-@app.route('/payment', methods=['GET','POST'])
-def payment():
-    print(session["new_user_email"])
-    try:
-        checkout_session = stripe.checkout.Session.create(
-            line_items=[
-                {
-                    # Provide the exact Price ID (for example, pr_1234) of the product you want to sell
-                    'price': stripe_keys["price_id"],
-                    'quantity': 1,
-                },
-            ],
-            mode='subscription',
-            success_url=url_for('payment_success', _external=True)+"?session_id={CHECKOUT_SESSION_ID}",
-            cancel_url=url_for('register', _external=True),
-            automatic_tax={'enabled': True},
-        )
-        #print("session: ", checkout_session.id, checkout_session.url, checkout_session)
-        session["stripe_session_id"] = checkout_session.id
-    except Exception as e:
-        return str(e)
+# @app.route('/payment', methods=['GET','POST'])
+# def payment():
+#     print(session["new_user_email"])
+#     try:
+#         checkout_session = stripe.checkout.Session.create(
+#             line_items=[
+#                 {
+#                     # Provide the exact Price ID (for example, pr_1234) of the product you want to sell
+#                     'price': stripe_keys["price_id"],
+#                     'quantity': 1,
+#                 },
+#             ],
+#             mode='subscription',
+#             success_url=url_for('payment_success', _external=True)+"?session_id={CHECKOUT_SESSION_ID}",
+#             cancel_url=url_for('register', _external=True),
+#             automatic_tax={'enabled': True},
+#         )
+#         #print("session: ", checkout_session.id, checkout_session.url, checkout_session)
+#         session["stripe_session_id"] = checkout_session.id
+#     except Exception as e:
+#         return str(e)
 
-    return redirect(checkout_session.url, code=303)
+#     return redirect(checkout_session.url, code=303)
 
 
-@app.route("/webhook", methods=["POST"])
-def stripe_webhook():
-    event = None
-    payload = request.data
+# @app.route("/webhook", methods=["POST"])
+# def stripe_webhook():
+#     event = None
+#     payload = request.data
 
-    try:
-        event = json.loads(payload)
-    except json.decoder.JSONDecodeError as e:
-        print('⚠️  Webhook error while parsing basic request.' + str(e))
-        return jsonify(success=False)
-    if stripe_keys["endpoint_secret"]:
-        # Only verify the event if there is an endpoint secret defined
-        # Otherwise use the basic event deserialized with json
-        sig_header = request.headers.get('stripe-signature')
-        try:
-            event = stripe.Webhook.construct_event(
-                payload, sig_header, stripe_keys["endpoint_secret"]
-            )
-        except stripe.error.SignatureVerificationError as e:
-            print('⚠️  Webhook signature verification failed.' + str(e))
-            return jsonify(success=False)
+#     try:
+#         event = json.loads(payload)
+#     except json.decoder.JSONDecodeError as e:
+#         print('⚠️  Webhook error while parsing basic request.' + str(e))
+#         return jsonify(success=False)
+#     if stripe_keys["endpoint_secret"]:
+#         # Only verify the event if there is an endpoint secret defined
+#         # Otherwise use the basic event deserialized with json
+#         sig_header = request.headers.get('stripe-signature')
+#         try:
+#             event = stripe.Webhook.construct_event(
+#                 payload, sig_header, stripe_keys["endpoint_secret"]
+#             )
+#         except stripe.error.SignatureVerificationError as e:
+#             print('⚠️  Webhook signature verification failed.' + str(e))
+#             return jsonify(success=False)
 
-    # HANDLE EVENTS
-    if event and event['type'] == 'checkout.session.completed':
-        customer_id = event['data']['object']['customer']
-        subscription_id = event['data']['object']['subscription']
-        session_id = event['data']['object']['id']
-        payment_status = event['data']['object']['payment_status']
-        if payment_status=="paid":
-            print("Checkout complete, paid.")
-            new_user = User(
-                stripe_customer_id = customer_id,
-                stripe_subscription_id = subscription_id,
-                stripe_session_id = session_id,
-                stripe_payment_status = payment_status,
-                )
-            db.session.add(new_user)
-            db.session.commit()
-        else:
-            return "Error with payment"
-    if event['type']=="customer.subscription.deleted":
-        cancelled_customer_id = event['data']['object']['customer']
-        # cancelled_subscription_id = event['data']['object']['id']
-        # cancelled_payment_status = event['data']['object']['status']
-        # DELETE FROM DATABASE AFTER STRIPE SENDS SUBSCRIPTION DELETED
-        result = db.session.execute(db.select(User).where(and_(User.stripe_customer_id==cancelled_customer_id)))
-        user = result.scalar()
-        db.session.delete(user)
-        db.session.commit()
+#     # HANDLE EVENTS
+#     if event and event['type'] == 'checkout.session.completed':
+#         customer_id = event['data']['object']['customer']
+#         subscription_id = event['data']['object']['subscription']
+#         session_id = event['data']['object']['id']
+#         payment_status = event['data']['object']['payment_status']
+#         if payment_status=="paid":
+#             print("Checkout complete, paid.")
+#             new_user = User(
+#                 stripe_customer_id = customer_id,
+#                 stripe_subscription_id = subscription_id,
+#                 stripe_session_id = session_id,
+#                 stripe_payment_status = payment_status,
+#                 )
+#             db.session.add(new_user)
+#             db.session.commit()
+#         else:
+#             return "Error with payment"
+#     if event['type']=="customer.subscription.deleted":
+#         cancelled_customer_id = event['data']['object']['customer']
+#         # cancelled_subscription_id = event['data']['object']['id']
+#         # cancelled_payment_status = event['data']['object']['status']
+#         # DELETE FROM DATABASE AFTER STRIPE SENDS SUBSCRIPTION DELETED
+#         result = db.session.execute(db.select(User).where(and_(User.stripe_customer_id==cancelled_customer_id)))
+#         user = result.scalar()
+#         db.session.delete(user)
+#         db.session.commit()
 
-        # REMOVE S3 IMAGES
-        bucket = s3_resource.Bucket(BUCKET_NAME)
-        aws_files = [item.key for item in bucket.objects.all()]
-        files_to_delete = [aws_file for aws_file in aws_files if aws_file.startswith(f"{user.url_path}_")]
-        print(f"Files: {len(aws_files)}")
-        print(f"Files to Delete: {len(files_to_delete)}")
-        print(f"{files_to_delete[0]}")
-        counter = 0
-        for file_to_delete in files_to_delete:
-            counter = counter+1
-            print(f"Deleting file {file_to_delete} - {counter} of {len(files_to_delete)}")
-            s3.delete_object(Bucket=BUCKET_NAME, Key=file_to_delete)
-        print("Listened for account subscription deleted")
-    else:
-        # Unexpected event type
-        print('Unhandled event type {}'.format(event['type']))
+#         # REMOVE S3 IMAGES
+#         bucket = s3_resource.Bucket(BUCKET_NAME)
+#         aws_files = [item.key for item in bucket.objects.all()]
+#         files_to_delete = [aws_file for aws_file in aws_files if aws_file.startswith(f"{user.url_path}_")]
+#         print(f"Files: {len(aws_files)}")
+#         print(f"Files to Delete: {len(files_to_delete)}")
+#         print(f"{files_to_delete[0]}")
+#         counter = 0
+#         for file_to_delete in files_to_delete:
+#             counter = counter+1
+#             print(f"Deleting file {file_to_delete} - {counter} of {len(files_to_delete)}")
+#             s3.delete_object(Bucket=BUCKET_NAME, Key=file_to_delete)
+#         print("Listened for account subscription deleted")
+#     else:
+#         # Unexpected event type
+#         print('Unhandled event type {}'.format(event['type']))
 
-    return jsonify(success=True)
+#     return jsonify(success=True)
 
-@app.route('/payment-success')
-def payment_success():
-    # result = db.session.execute(db.select(User).where(User.stripe_session_id == session["stripe_session_id"]))
-    # user = result.scalar()
-    print(session["new_user_url_path"])
-    # CREATE NEW USER
-    new_user = User(
-        email = session["new_user_email"],
-        password = session["new_user_hashed_password"],
-        url_path = session["new_user_url_path"],
-        name = session["new_user_name"],
-        job_title = session["new_user_job_title"],
-        payment = True,
-        theme="Magazine",
-        #colors="light",
-        headline_description="Lorem ipsum dolor sit amet, consectetur adipiscing elit, sed do eiusmod tempor incididunt ut labore et dolore magna aliqua. Ut enim ad minim veniam, quis nostrud exercitation ullamco laboris nisi ut aliquip ex ea commodo consequat.",
-    )
-    print("new user set")
-    print(new_user.email)
-    db.session.add(new_user)
-    print("new user added")
-    db.session.commit()
-    print("new user committed")
-    #login_user(new_user)
+# @app.route('/payment-success')
+# def payment_success():
+#     # result = db.session.execute(db.select(User).where(User.stripe_session_id == session["stripe_session_id"]))
+#     # user = result.scalar()
+#     print(session["new_user_url_path"])
+#     # CREATE NEW USER
+#     new_user = User(
+#         email = session["new_user_email"],
+#         password = session["new_user_hashed_password"],
+#         url_path = session["new_user_url_path"],
+#         name = session["new_user_name"],
+#         job_title = session["new_user_job_title"],
+#         payment = True,
+#         theme="Magazine",
+#         #colors="light",
+#         headline_description="Lorem ipsum dolor sit amet, consectetur adipiscing elit, sed do eiusmod tempor incididunt ut labore et dolore magna aliqua. Ut enim ad minim veniam, quis nostrud exercitation ullamco laboris nisi ut aliquip ex ea commodo consequat.",
+#     )
+#     print("new user set")
+#     print(new_user.email)
+#     db.session.add(new_user)
+#     print("new user added")
+#     db.session.commit()
+#     print("new user committed")
+#     #login_user(new_user)
 
-    email_registration_success(new_user)
-    flash(message="Successfully created account! Click Edit Card and Edit Images in the top right menu to customize your digital business card.")
-    return redirect(url_for('card', url_path=new_user.url_path))
+#     email_registration_success(new_user)
+#     flash(message="Successfully created account! Click Edit Card and Edit Images in the top right menu to customize your digital business card.")
+#     return redirect(url_for('card', url_path=new_user.url_path))
 
 
 
