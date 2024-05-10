@@ -242,10 +242,10 @@ def register():
                 print("new user added")
                 db.session.commit()
                 print("new user committed")
-                email_registration_success(new_user)
-                login_user(new_user)
+                # email_registration_success(new_user)
+                # login_user(new_user)
 
-                return redirect(url_for('card', url_path=new_user.url_path))
+                # return redirect(url_for('card', url_path=new_user.url_path))
             except Exception as e:
                 print(e.message)
                 raise e
