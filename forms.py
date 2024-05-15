@@ -20,16 +20,12 @@ class SignupForm(FlaskForm):
     email = StringField(label='Email', validators=[DataRequired(), validate_email])
     password = PasswordField(label='Password', validators=[DataRequired(), EqualTo('confirm', message='Passwords must match')])
     confirm  = PasswordField('Repeat Password')
-    url_path = StringField(label="Unique URL path", description='Example: jordan-smith will have a url of seedcards.com/card/jordan-smith. This cannot be changed and must be unique from other accounts.', validators=[DataRequired()])
+    url_path = StringField(label="Unique URL path", description='Example: jordan-smith will have a url of https://seed-cards.onrender.com/card/jordan-smith. This cannot be changed and must be unique from other accounts.', validators=[DataRequired()])
     name = StringField(label='Name', validators=[DataRequired()])
     job_title = StringField(label='Job Title', validators=[DataRequired()])
     submit = SubmitField(label="Submit")
 
-#USE STRIPE
-class PaymentForm(FlaskForm):
-    credit_name = StringField(label='Name', validators=[DataRequired()])
-    credit_email = StringField(label='Email', validators=[DataRequired(), validate_email])
-    submit = SubmitField(label="Submit")
+
 
 class LogInForm(FlaskForm):
     email = StringField(label='Email', validators=[DataRequired(), validate_email])
@@ -38,44 +34,28 @@ class LogInForm(FlaskForm):
 
 
 class EditCardForm(FlaskForm):
-    theme = SelectField(label="Theme", choices=[('Magazine'), ('Minimalist'), ('Drama')])
+    theme = SelectField(label="Choose your theme", choices=[('Magazine'), ('Minimalist'), ('Drama')])
     name = StringField(label='Name')
-    job_title = StringField(label='Job Title')
-    headline_description = CKEditorField(label='Short Headline Description')
+    job_title = StringField(label='Job title')
+    headline_description = CKEditorField(label='Short headline description')
     displayed_email = StringField(label='Email displayed on card')
-    phone = StringField(label="Phone")
+    phone = StringField(label="Phone number")
     company = StringField(label='Company')
-    location = StringField(label="Location")
-    social_plat1 = SelectField(label="Social Platform 1", choices=[(''), ('Behance'), ('Discord'), ('Github'), ('Gitlab'), ('Instagram'), ('LinkedIn'), ('Mastodon'), ('Meta'), ('Pinterest'), ('Reddit'), ('Snapchat'), ('Threads'), ('TikTok'), ('Tumblr'), ('Twitch'), ('Twitter'), ('Twitter-X'), ('Youtube')])
-    social_link1 = StringField(label="Social Link 1")
-    social_plat2 = SelectField(label="Social Platform 2", choices=[(''), ('Behance'), ('Discord'), ('Github'), ('Gitlab'), ('Instagram'), ('LinkedIn'), ('Mastodon'), ('Meta'), ('Pinterest'), ('Reddit'), ('Snapchat'), ('Threads'), ('TikTok'), ('Tumblr'), ('Twitch'), ('Twitter'), ('Twitter-X'), ('Youtube')])
-    social_link2 = StringField(label="Social Link 2")
-    social_plat3 = SelectField(label="Social Platform 3", choices=[(''), ('Behance'), ('Discord'), ('Github'), ('Gitlab'), ('Instagram'), ('LinkedIn'), ('Mastodon'), ('Meta'), ('Pinterest'), ('Reddit'), ('Snapchat'), ('Threads'), ('TikTok'), ('Tumblr'), ('Twitch'), ('Twitter'), ('Twitter-X'), ('Youtube')])
-    social_link3 = StringField(label="Social Link 3")
-    social_plat4 = SelectField(label="Social Platform 4", choices=[(''), ('Behance'), ('Discord'), ('Github'), ('Gitlab'), ('Instagram'), ('LinkedIn'), ('Mastodon'), ('Meta'), ('Pinterest'), ('Reddit'), ('Snapchat'), ('Threads'), ('TikTok'), ('Tumblr'), ('Twitch'), ('Twitter'), ('Twitter-X'), ('Youtube')])
-    social_link4 = StringField(label="Social Link 4")
+    location = StringField(label="Location (example: Brooklyn, NY)")
+    social_plat1 = SelectField(label="Choose your social platform 1 (example: Instagram)", choices=[(''), ('Behance'), ('Discord'), ('Github'), ('Gitlab'), ('Instagram'), ('LinkedIn'), ('Mastodon'), ('Meta'), ('Pinterest'), ('Reddit'), ('Snapchat'), ('Threads'), ('TikTok'), ('Tumblr'), ('Twitch'), ('Twitter'), ('Twitter-X'), ('Youtube')])
+    social_link1 = StringField(label="Social link 1 (example: www.instagram.com/user_name)")
+    social_plat2 = SelectField(label="Choose your social platform 2 (example: LinkedIn)", choices=[(''), ('Behance'), ('Discord'), ('Github'), ('Gitlab'), ('Instagram'), ('LinkedIn'), ('Mastodon'), ('Meta'), ('Pinterest'), ('Reddit'), ('Snapchat'), ('Threads'), ('TikTok'), ('Tumblr'), ('Twitch'), ('Twitter'), ('Twitter-X'), ('Youtube')])
+    social_link2 = StringField(label="Social link 2 (example: https://www.linkedin.com/in/user-name-id/)")
+    social_plat3 = SelectField(label="Choose your social platform 3", choices=[(''), ('Behance'), ('Discord'), ('Github'), ('Gitlab'), ('Instagram'), ('LinkedIn'), ('Mastodon'), ('Meta'), ('Pinterest'), ('Reddit'), ('Snapchat'), ('Threads'), ('TikTok'), ('Tumblr'), ('Twitch'), ('Twitter'), ('Twitter-X'), ('Youtube')])
+    social_link3 = StringField(label="Social link 3")
+    social_plat4 = SelectField(label="Choose your social platform 4", choices=[(''), ('Behance'), ('Discord'), ('Github'), ('Gitlab'), ('Instagram'), ('LinkedIn'), ('Mastodon'), ('Meta'), ('Pinterest'), ('Reddit'), ('Snapchat'), ('Threads'), ('TikTok'), ('Tumblr'), ('Twitch'), ('Twitter'), ('Twitter-X'), ('Youtube')])
+    social_link4 = StringField(label="Social link 4")
     website_link = StringField(label="Website")
     venmo = StringField(label="Venmo")
     stripe = StringField(label="Stripe")
     body = CKEditorField(label="Long Description")
     submit = SubmitField(label="Update")
 
-class EditImagesForm(FlaskForm):
-    profile_picture = FileField(label='Profile Picture')
-    #logo = FileField(label='Logo')
-    work1 = FileField(label='Work 1')
-    work2 = FileField(label='Work 2')
-    work3 = FileField(label='Work 3')
-    work4 = FileField(label='Work 4')
-    work5 = FileField(label='Work 5')
-    submit = SubmitField(label="Update")
-
-
-class EditAccountForm(FlaskForm):
-    email = StringField(label='Account Email to log in', validators=[validate_email])
-    password = PasswordField(label='Password', validators=[DataRequired(), EqualTo('confirm', message='Passwords must match')])
-    confirm  = PasswordField('Repeat Password')
-    submit = SubmitField(label="Update")
 
 class EditPasswordForm(FlaskForm):
     confirm  = PasswordField('Repeat New Password')
