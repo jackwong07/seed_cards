@@ -12,6 +12,7 @@ nav{
 .nav-link{
     color: white;
 }
+ul.navbar-nav li a:hover { color: burlywood !important; }
 
 body.drama-temp {
     background-color: #202127;
