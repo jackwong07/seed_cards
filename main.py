@@ -16,6 +16,7 @@ from forms import SignupForm, EditCardForm, LogInForm, VCard, ForgotPasswordForm
 from PIL import Image
 from sqlalchemy import or_, Integer, String, Boolean, Text
 from sqlalchemy.orm import DeclarativeBase, Mapped, mapped_column, relationship
+import time
 from werkzeug.security import generate_password_hash, check_password_hash
 from werkzeug.utils import secure_filename
 import logging
@@ -247,10 +248,10 @@ def register():
             try:
                 db.session.add(new_user)
                 db.session.commit()
-                # email_registration_success(new_user)
+                email_registration_success(new_user)
                 login_user(new_user)
                 logged_in = logged_in_status(current_user)
-
+                
                 return redirect(url_for('card', url_path=new_user.url_path))
             except Exception as e:
                 print(e.message)
@@ -557,27 +558,30 @@ def edit_account(url_path):
 @app.route('/card/cancel-account', methods=["POST"])
 @login_required
 def cancel_account():
-    #TODO remove S3 removal and delete user when adding stripe webhook back. Keep the email function
-    # REMOVE S3 IMAGES
-    bucket = s3_resource.Bucket(BUCKET_NAME)
-    aws_files = [item.key for item in bucket.objects.all()]
-    files_to_delete = [aws_file for aws_file in aws_files if aws_file.startswith(f"{current_user.url_path}_")]
-    print(f"Files: {len(aws_files)}")
-    print(f"Files to Delete: {len(files_to_delete)}")
-    print(f"{files_to_delete[0]}")
-    counter = 0
-    for file_to_delete in files_to_delete:
-        counter = counter+1
-        print(f"Deleting file {file_to_delete} - {counter} of {len(files_to_delete)}")
-        s3.delete_object(Bucket=BUCKET_NAME, Key=file_to_delete)
-    print("Listened for account subscription deleted")
-
+    print("cancelling account")
+    url_path = current_user.url_path
+    print(url_path)
     email_cancellation_success(current_user)
+    time.sleep(3)
+    print('try to delete')
     db.session.delete(current_user)
     db.session.commit()
     flash("Account cancelled. Thank you for your support.")
-    return redirect(url_for('card', url_path=current_user.url_path))
-
+    return redirect(url_for('home'))
+    #TODO remove S3 removal and delete user when adding stripe webhook back. Keep the email function
+    # REMOVE S3 IMAGES
+    # bucket = s3_resource.Bucket(BUCKET_NAME)
+    # aws_files = [item.key for item in bucket.objects.all()]
+    # files_to_delete = [aws_file for aws_file in aws_files if aws_file.startswith(f"{current_user.url_path}_")]
+    # print(f"Files: {len(aws_files)}")
+    # print(f"Files to Delete: {len(files_to_delete)}")
+    # print(f"{files_to_delete[0]}")
+    # counter = 0
+    # for file_to_delete in files_to_delete:
+    #     counter = counter+1
+    #     print(f"Deleting file {file_to_delete} - {counter} of {len(files_to_delete)}")
+    #     s3.delete_object(Bucket=BUCKET_NAME, Key=file_to_delete)
+    # print("Listened for account subscription deleted")
 
 @app.route('/card/edit-card/<url_path>', methods=["GET","POST"])
 @login_required
