@@ -18,6 +18,7 @@ from sqlalchemy import or_, Integer, String, Boolean, Text
 from sqlalchemy.orm import DeclarativeBase, Mapped, mapped_column, relationship
 from werkzeug.security import generate_password_hash, check_password_hash
 from werkzeug.utils import secure_filename
+import logging
 # import stripe
 
 
@@ -151,34 +152,15 @@ def save_to_s3(image, url_path, s3_name):
         Bucket=BUCKET_NAME,
         Key=f"{url_path}_{s3_name}",
         Body=buffer)
+    
 
+#boto3.set_stream_logger('', logging.DEBUG)
 
 def delete_from_s3(url_path, s3_name):
     bucket = s3_resource.Bucket(BUCKET_NAME)
-    aws_files = [item.key for item in bucket.objects.all()]
-    files_to_delete = [aws_file for aws_file in aws_files if aws_file.startswith(f"{url_path}_{s3_name}")]
-    print(f"Files: {len(aws_files)}")
-    print(f"Files to Delete: {len(files_to_delete)}")
-    print(f"{files_to_delete[0]}")
-    counter = 0
-    for file_to_delete in files_to_delete:
-        counter = counter+1
-        print(f"Deleting file {file_to_delete} - {counter} of {len(files_to_delete)}")
+    for obj in bucket.objects.all():
+        file_to_delete = f"{url_path}_{s3_name}"
         s3.delete_object(Bucket=BUCKET_NAME, Key=file_to_delete)
-    
-    # resp = s3.list_objects_v2(Bucket=BUCKET_NAME)
-    # print(resp)
-    # file_to_delete = f"{url_path}_{s3_name}"
-    # print(file_to_delete)
-    # s3.delete_object(Bucket=BUCKET_NAME, Key=file_to_delete)
-
-    # my_object = s3.Object(Bucket=BUCKET_NAME, Key=f"{url_path}_{s3_name}")
-    # response = my_object.delete()
-    
-    # bucket = s3_resource.Bucket(BUCKET_NAME)
-    # for obj in bucket.objects.all():
-    #     file_to_delete = f"{url_path}_{s3_name}"
-    #     s3.delete_object(Bucket=BUCKET_NAME, Key=file_to_delete)
 
 # STRIPE SETUP
 #TODO: set as environment variable
@@ -710,7 +692,7 @@ def edit_images(url_path):
                 new_s3_profile_pic = secure_filename(new_profile_pic.filename)
                 old_profile_pic = current_user.profile_pic
                 if new_s3_profile_pic != old_profile_pic:
-                    delete_from_s3(url_path, old_profile_pic)
+                    #delete_from_s3(url_path, old_profile_pic)
                     save_to_s3(new_profile_pic, url_path, new_s3_profile_pic)
                 current_user.profile_pic = new_s3_profile_pic
 

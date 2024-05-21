@@ -3,6 +3,13 @@ import string
 import smtplib
 import os 
 
+from sendgrid import SendGridAPIClient
+from sendgrid.helpers.mail import Mail
+
+
+
+
+
 #TODO add to environment variables, get business email
 my_email = os.environ.get("MY_EMAIL")
 password= os.environ.get("MY_EMAIL_PASSWORD")
@@ -21,20 +28,33 @@ def email_temp_password(user):
     with open(f"{user.name}_email.txt", mode='w') as send_email:
         send_email.write(content)
         
-    with smtplib.SMTP("smtp.gmail.com") as connection:
-        connection.starttls()
-        connection.login(user=my_email, password=password)
-        connection.sendmail(from_addr=my_email, 
-                            to_addrs= user.email,
-                            msg=f"Seed Cards Temporary Password\n\n{content}")
-        
+    message = Mail(
+        from_email='rae.a.warner@gmail.com',
+        to_emails=user.email,
+        subject=f'Hi {user.name}, welcome to Seed Cards!',
+        html_content=f'{content}')
     try:
-        os.remove(f"{user.name}_email.txt")
-    except OSError as e:
-        # If it fails, inform the user.
-        print("Error: %s - %s." % (e.filename, e.strerror))
-    
+        sg = SendGridAPIClient(os.environ.get('SENDGRID_API_KEY'))
+        response = sg.send(message)
+        print(response.status_code)
+    except Exception as e:
+        print(e.message)
+
     return temp_pass
+    # with smtplib.SMTP("smtp.gmail.com") as connection:
+    #     connection.starttls()
+    #     connection.login(user=my_email, password=password)
+    #     connection.sendmail(from_addr=my_email, 
+    #                         to_addrs= user.email,
+    #                         msg=f"Seed Cards Temporary Password\n\n{content}")
+        
+    # try:
+    #     os.remove(f"{user.name}_email.txt")
+    # except OSError as e:
+    #     # If it fails, inform the user.
+    #     print("Error: %s - %s." % (e.filename, e.strerror))
+    
+    # return temp_pass
 
 
 # SEND EMAIL FOR REGISTRATION
