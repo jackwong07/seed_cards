@@ -418,7 +418,9 @@ def forgot_password():
         user = result.scalar()
         if user:
             temp_pass = email_temp_password(user)
+            print(temp_pass)
             user.password = generate_password_hash(temp_pass, method='pbkdf2:sha256', salt_length=8)
+
             db.session.commit()
             flash("Please check your email for a temporary password that you can use to login. For security, please update to a new password in Edit Account.")
             return redirect(url_for('login'))

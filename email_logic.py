@@ -2,12 +2,12 @@ import random
 import string
 import smtplib
 import os 
+from flask import jsonify
 
 from sendgrid import SendGridAPIClient
 from sendgrid.helpers.mail import Mail
-
-
-
+from email.mime.text import MIMEText
+from email.mime.multipart import MIMEMultipart
 
 
 #TODO add to environment variables, get business email
@@ -24,10 +24,9 @@ def email_temp_password(user):
         content = content.replace("[EMAIL]", user.email)
         content = content.replace("[URL_PATH]", user.url_path)
         content = content.replace("[TEMPORARY_PASSWORD]", temp_pass)
-    
-    with open(f"{user.name}_email.txt", mode='w') as send_email:
-        send_email.write(content)
-        
+
+
+
     message = Mail(
         from_email='rae.a.warner@gmail.com',
         to_emails=user.email,
@@ -35,26 +34,20 @@ def email_temp_password(user):
         html_content=f'{content}')
     try:
         sg = SendGridAPIClient(os.environ.get('SENDGRID_API_KEY'))
-        response = sg.send(message)
+        # response = sg.send(message)
+        
+        
+        mail_json = message.get()
+        response = sg.client.mail.send.post(request_body=mail_json)
+
         print(response.status_code)
+        print(response.headers)
     except Exception as e:
         print(e.message)
-
     return temp_pass
-    # with smtplib.SMTP("smtp.gmail.com") as connection:
-    #     connection.starttls()
-    #     connection.login(user=my_email, password=password)
-    #     connection.sendmail(from_addr=my_email, 
-    #                         to_addrs= user.email,
-    #                         msg=f"Seed Cards Temporary Password\n\n{content}")
-        
-    # try:
-    #     os.remove(f"{user.name}_email.txt")
-    # except OSError as e:
-    #     # If it fails, inform the user.
-    #     print("Error: %s - %s." % (e.filename, e.strerror))
-    
-    # return temp_pass
+
+
+
 
 
 # SEND EMAIL FOR REGISTRATION
