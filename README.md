@@ -22,4 +22,4 @@ Jacklyn Wong
 ## Version History
 
 * 0.1
-    * Initial Release
+    * Initial Release - May 2024
