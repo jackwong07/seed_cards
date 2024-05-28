@@ -1,6 +1,7 @@
 # Project
 
-![alt text](https://github.com/jackwong07/seed_cards/blob/master/static/favicon/favicon-32x32.png?raw=true) Seed Cards - Digital Business Card application for artists and creatives
+![alt text](https://github.com/jackwong07/seed_cards/blob/master/static/favicon/favicon-32x32.png?raw=true) 
+**Seed Cards** - Digital Business Card application for artists and creatives
 
 
 ## Description
